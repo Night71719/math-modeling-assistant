@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>数学建模训练记录助手</title>
+  <style>
+    :root{--blue:#377cf6;--blue2:#eaf2ff;--ink:#17233c;--muted:#6f7c91;--line:#dfe7f2;--bg:#f4f7fb;--white:#fff;--green:#22a06b;--amber:#d98c18;--red:#df4c56;--shadow:0 5px 20px rgba(35,65,110,.07)}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.65 "Microsoft YaHei","PingFang SC",system-ui,sans-serif}
+    button,input,select,textarea{font:inherit}button{cursor:pointer}.hidden{display:none!important}
+    .topbar{height:68px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 32px;position:sticky;top:0;z-index:30}
+    .brand{display:flex;gap:12px;align-items:center;font-size:20px;font-weight:800}.logo{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,#377cf6,#74a8ff);color:#fff;display:grid;place-items:center;font-size:20px}
+    .btn{border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:9px;padding:8px 14px;transition:.18s;display:inline-flex;gap:7px;align-items:center;justify-content:center}.btn:hover{border-color:#9ebdf5;background:#f7faff}.btn.primary{background:var(--blue);border-color:var(--blue);color:#fff;box-shadow:0 4px 12px rgba(55,124,246,.22)}.btn.primary:hover{background:#286ce8}.btn.danger{color:var(--red)}.btn.sm{padding:5px 10px;font-size:12px}.icon-btn{width:31px;height:31px;border:0;border-radius:8px;background:transparent;color:var(--muted);font-size:17px}.icon-btn:hover{background:#f1f4f8;color:var(--red)}
+    .home{max-width:1220px;margin:auto;padding:42px 26px}.hero{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:25px}.hero h1{font-size:30px;margin:0 0 5px}.hero p{margin:0;color:var(--muted)}
+    .project-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}.project-card,.card{background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}.project-card{padding:22px;cursor:pointer;position:relative;transition:.2s}.project-card:hover{transform:translateY(-3px);border-color:#b9cff5;box-shadow:0 10px 28px rgba(35,65,110,.11)}.project-card h3{font-size:18px;margin:14px 35px 10px 0}.project-card .delete-project{position:absolute;right:13px;top:13px}.badge{display:inline-flex;align-items:center;border-radius:99px;padding:3px 9px;font-size:12px;font-weight:700;background:#eef2f7;color:#5e6a7c}.badge.doing,.badge.备选{background:#fff5dc;color:#a56b0b}.badge.done,.badge.成功,.badge.已完成,.badge.已采用{background:#e7f8f0;color:#16815a}.badge.failed,.badge.失败,.badge.已废弃{background:#ffecef;color:#bd3844}.badge.未开始,.badge.待办,.badge.待测试{background:#eef2f7;color:#647084}.badge.进行中{background:#eaf2ff;color:#286ad7}
+    .meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;color:var(--muted);font-size:13px;margin:16px 0}.remark{min-height:45px;color:#536176}.progress{height:7px;background:#e9eef6;border-radius:99px;overflow:hidden;margin-top:8px}.progress>i{display:block;height:100%;background:linear-gradient(90deg,#377cf6,#70a8ff);border-radius:99px}.progress-row{display:flex;justify-content:space-between;color:var(--muted);font-size:12px}
+    .workspace{min-height:100vh}.work-head{height:68px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 22px;gap:18px;position:sticky;top:0;z-index:40}.work-title{font-size:18px;font-weight:800;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.save-state{margin-left:auto;color:var(--muted);font-size:12px}.nickname{width:105px;border:1px solid var(--line);border-radius:8px;padding:6px 9px;color:#4b5c74}
+    .layout{display:grid;grid-template-columns:230px 1fr;min-height:calc(100vh - 68px)}.sidebar{background:#fff;border-right:1px solid var(--line);padding:22px 14px;position:sticky;top:68px;height:calc(100vh - 68px)}.nav-btn{width:100%;border:0;background:transparent;text-align:left;padding:11px 14px;margin:3px 0;border-radius:9px;color:#526178}.nav-btn:hover{background:#f5f8fc}.nav-btn.active{background:var(--blue2);color:#276cdf;font-weight:700}.content{padding:28px 30px;max-width:1400px;width:100%;overflow:hidden}.page-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;gap:12px}.page-title h2{font-size:23px;margin:0}.page-title p{margin:2px 0 0;color:var(--muted)}
+    .card{padding:20px;margin-bottom:18px}.card-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:15px}.card-head h3,.card h3{margin:0;font-size:16px}.soft{background:#f8faff;border:1px solid #e6edf8;border-radius:10px;padding:15px}.section-stack{display:grid;gap:14px}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+    textarea,input,select{border:1px solid #d8e1ed;border-radius:8px;background:#fff;color:var(--ink);padding:9px 11px;outline:none;width:100%}textarea:focus,input:focus,select:focus{border-color:#78a4f4;box-shadow:0 0 0 3px rgba(55,124,246,.09)}textarea{resize:vertical;min-height:95px}.big-text{min-height:210px}.auto-save{font-size:12px;color:var(--muted);margin-top:7px}
+    .item-card{border:1px solid var(--line);border-radius:11px;padding:16px;background:#fff}.item-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.item-title{font-weight:800;font-size:15px}.item-actions{display:flex;gap:4px;white-space:nowrap}.item-meta{display:flex;gap:8px;flex-wrap:wrap;color:var(--muted);font-size:12px;margin:7px 0}.detail-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:12px}.detail{background:#f8fafc;border-radius:8px;padding:9px 11px}.detail b{display:block;font-size:12px;color:#7b8798;margin-bottom:3px}.empty{text-align:center;color:var(--muted);padding:34px 15px;border:1px dashed #cdd8e7;border-radius:11px;background:#fbfcfe}.empty .empty-icon{font-size:28px;opacity:.55}
+    .filterbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px}.filterbar select{width:auto;min-width:150px}.resource-grid,.model-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.resource-icon{width:42px;height:42px;border-radius:10px;background:var(--blue2);color:var(--blue);display:grid;place-items:center;font-size:20px;flex:none}.resource-main{display:flex;gap:12px}.data-row{display:grid;grid-template-columns:7px 1fr auto;gap:13px;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fff}.data-color{background:#8fa1b9}.data-color.raw{background:#64748b}.data-color.clean{background:#377cf6}.data-color.feature{background:#8b5cf6}.data-color.middle{background:#e89b27}.data-color.final{background:#20a46b}.data-body{padding:13px 0}.data-actions{padding:10px}
+    .table-wrap{overflow-x:auto}.compare-table{border-collapse:collapse;width:100%;min-width:650px}.compare-table th,.compare-table td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}.compare-table th{background:#f6f8fc;color:#5d6b80;font-size:12px}.compare-table tr:last-child td{border:0}
+    .checkline{display:flex;gap:9px;align-items:flex-start}.checkline input{width:auto;margin-top:5px}.charts{display:grid;grid-template-columns:repeat(3,1fr);gap:15px}.chart{height:220px;border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column}.bars{flex:1;display:flex;align-items:flex-end;justify-content:center;gap:13px;border-bottom:1px solid #ccd6e4;padding:12px 8px 0}.bar-wrap{height:100%;flex:1;max-width:48px;display:flex;flex-direction:column;justify-content:flex-end;align-items:center}.bar{width:100%;background:linear-gradient(#77a9ff,#377cf6);border-radius:5px 5px 0 0;min-height:3px}.bar-val{font-size:10px;color:#5f6d80}.bar-name{font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:55px}.chart h4{margin:0;text-align:center}
+    .kanban{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.kanban-col{background:#f4f7fb;border:1px solid var(--line);border-radius:11px;padding:12px;min-height:180px}.kanban-head{font-weight:800;display:flex;justify-content:space-between;margin-bottom:11px}.task{background:#fff;border:1px solid #e0e7f0;border-radius:9px;padding:12px;margin-bottom:10px}.task select{padding:5px;margin-top:8px}.discussion{max-height:350px;overflow:auto;display:grid;gap:11px}.message{display:flex;gap:10px}.avatar{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--blue2);color:var(--blue);font-weight:700;flex:none}.bubble{background:#f5f8fc;padding:9px 12px;border-radius:4px 12px 12px 12px;flex:1}.bubble-head{display:flex;justify-content:space-between;color:var(--muted);font-size:12px}.sendbox{display:flex;gap:9px;margin-top:13px}.sendbox input{flex:1}.decision{border-left:4px solid #f0a72e;background:#fff9ec;border-radius:8px;padding:12px 14px;margin-top:10px}
+    .check-item{display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--line);padding:10px 2px}.check-item input{width:auto}.check-item.done span{text-decoration:line-through;color:#8b96a6}.check-item .icon-btn{margin-left:auto}
+    .modal-backdrop{position:fixed;inset:0;background:rgba(15,27,48,.46);z-index:100;display:grid;place-items:center;padding:20px}.modal{background:#fff;width:min(680px,100%);max-height:90vh;overflow:auto;border-radius:15px;box-shadow:0 24px 70px rgba(10,25,50,.24)}.modal-head{padding:18px 22px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:#fff;z-index:2}.modal-head h3{margin:0}.modal-body{padding:20px 22px}.modal-foot{padding:14px 22px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:9px;position:sticky;bottom:0;background:#fff}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.field{display:grid;gap:5px}.field label{font-size:12px;font-weight:700;color:#65738a}.span2{grid-column:1/-1}.toast{position:fixed;right:24px;bottom:24px;background:#1f2f48;color:#fff;padding:10px 17px;border-radius:9px;box-shadow:0 8px 28px rgba(15,32,60,.25);z-index:200;animation:toastIn .2s}.mobile-menu{display:none}
+    @keyframes toastIn{from{transform:translateY(10px);opacity:0}}
+    @media(max-width:950px){.project-grid{grid-template-columns:repeat(2,1fr)}.layout{grid-template-columns:200px 1fr}.content{padding:22px 18px}.resource-grid,.model-grid{grid-template-columns:1fr}.charts{grid-template-columns:1fr}.grid3{grid-template-columns:1fr 1fr}}
+    @media(max-width:700px){.topbar{padding:0 16px}.home{padding:28px 15px}.hero{align-items:flex-start;gap:18px}.hero h1{font-size:24px}.project-grid{grid-template-columns:1fr}.work-head{padding:0 12px;gap:9px}.work-head .badge,.save-state{display:none}.mobile-menu{display:inline-grid}.layout{display:block}.sidebar{position:fixed;left:0;top:68px;z-index:35;width:240px;transform:translateX(-105%);transition:.2s;box-shadow:10px 0 35px rgba(15,30,55,.13)}.sidebar.open{transform:none}.content{padding:20px 13px}.grid2,.grid3,.detail-grid,.kanban,.form-grid{grid-template-columns:1fr}.span2{grid-column:auto}.page-title{align-items:flex-start}.page-title p{display:none}.card{padding:15px}.nickname{width:80px}.hero .btn{white-space:nowrap}.brand span:last-child{font-size:17px}.modal-backdrop{padding:8px}.modal{max-height:96vh}.modal-body{padding:16px}.resource-grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+  <div id="modalRoot"></div>
+  <div id="toastRoot"></div>
+<script>
+const $=s=>document.querySelector(s), esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const now=()=>new Date().toLocaleString('zh-CN',{hour12:false}).replaceAll('/','-');
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const outline=`摘要
+问题重述
+问题分析
+模型假设
+符号说明
+模型建立
+模型求解
+结果分析
+模型评价
+模型推广
+参考文献
+附录`;
+const newProject=(name,note,status='未开始',deadline='')=>({id:uid(),name,note,status,deadline,modified:now(),stem:'',idea:'',questions:[],assumptions:[],resources:[],data:[],models:[],experiments:[],tasks:[],messages:[],decisions:[],outline,chapters:[],checks:['摘要是否完成','图表是否有标题','模型假设是否写清楚','模型优缺点是否说明','参考文献是否完整','附录代码是否整理'].map(text=>({id:uid(),text,done:false}))});
+function seed(){
+  const p=newProject('2023 年国赛 C 题','重点练习数据分析、预测模型与论文表达。','进行中','2026-07-20');
+  p.stem='某地区蔬菜类商品的自动定价与补货决策问题（示例题干）。请结合附件销售流水、批发价格等数据完成各小问。';
+  p.idea='数据清洗 → 描述性分析 → 销量预测 → 补货优化 → 敏感性分析 → 结果评价';
+  p.questions=[{id:uid(),name:'问题 1：销售规律分析',requirement:'分析不同品类与单品的销售量分布规律及相互关系。',understanding:'从时间、品类和单品三个层次分析。',goal:'找出季节性、周期性和品类关联。',method:'描述性统计、相关性分析、聚类',status:'已完成'},{id:uid(),name:'问题 2：补货与定价',requirement:'制定未来一周的日补货总量与定价策略。',understanding:'需要预测需求并建立收益优化模型。',goal:'在损耗约束下最大化收益。',method:'回归预测 + 约束优化',status:'进行中'}];
+  p.assumptions=[{id:uid(),content:'短期内市场需求的季节性规律保持稳定',question:'问题 2',confirmed:true},{id:uid(),content:'商品损耗率可由历史平均值近似',question:'问题 2',confirmed:false}];
+  p.resources=[{id:uid(),name:'赛题原文.pdf',type:'赛题 PDF',time:'2026-06-21 14:30',note:'国赛 C 题题面',question:'全部',link:''},{id:uid(),name:'时间序列预测方法综述',type:'参考论文',time:'2026-06-22 09:10',note:'用于选择预测模型',question:'问题 2',link:'https://example.com'}];
+  p.data=[{id:uid(),name:'销售流水原始数据',type:'原始数据',file:'sales_raw.xlsx',source:'赛题附件 2',description:'未经处理的销售明细',question:'问题 1',time:'2026-06-21 15:20'},{id:uid(),name:'销售清洗数据 v1',type:'清洗后数据',file:'sales_clean_v1.csv',source:'sales_raw.xlsx',description:'去除重复记录并补齐日期',question:'问题 1',time:'2026-06-22 11:10'},{id:uid(),name:'预测特征 v3',type:'特征工程数据',file:'sales_feature_v3.csv',source:'sales_clean_v1.csv',description:'加入星期、节假日和滑动均值特征',question:'问题 2',time:'2026-06-23 16:40'},{id:uid(),name:'最终预测结果',type:'最终结果',file:'forecast_result.csv',source:'随机森林预测',description:'未来 7 天销量预测',question:'问题 2',time:'2026-06-25 20:15'}];
+  p.models=[{id:uid(),name:'线性回归',question:'问题 2',type:'预测',problem:'预测次日各品类销量',principle:'利用最小二乘法拟合变量关系',input:'历史销量、星期、价格',output:'预测销量',pros:'计算快、容易解释',cons:'难以处理复杂非线性关系',status:'备选',code:'linear_regression.py',note:'作为基线模型'},{id:uid(),name:'随机森林',question:'问题 2',type:'预测',problem:'预测未来一周销量',principle:'集成多棵决策树降低预测方差',input:'销量滞后项、日期与价格特征',output:'每日销量预测',pros:'非线性拟合能力强、稳定',cons:'解释性弱，模型体积较大',status:'已采用',code:'random_forest_v2.py',note:'当前最佳模型'}];
+  p.experiments=[{id:uid(),no:'EXP-002',name:'随机森林参数调优',question:'问题 2',model:'随机森林',data:'sales_feature_v3.csv',params:'n_estimators=300, max_depth=8',metrics:'MAE：12.36\nRMSE：18.72\nR²：0.92',output:'rf_result_v2.csv',image:'预测结果对比图.png',conclusion:'相较基线模型，各项指标明显改善，可作为主模型。',status:'已采用',time:'2026-06-25 21:30'},{id:uid(),no:'EXP-001',name:'线性回归基线实验',question:'问题 2',model:'线性回归',data:'sales_feature_v3.csv',params:'默认参数',metrics:'MAE：18.42\nRMSE：24.18\nR²：0.87',output:'lr_baseline.csv',image:'',conclusion:'模型可解释性好，但节假日峰值拟合不足。',status:'备选',time:'2026-06-24 19:15'}];
+  p.tasks=[{id:uid(),name:'数据预处理',description:'完成附件销售流水的缺失值与异常值处理',owner:'队友 A',deadline:'2026-07-02',question:'问题 1',status:'待办'},{id:uid(),name:'预测模型调参',description:'比较不同深度与树数量',owner:'宋清来',deadline:'2026-07-05',question:'问题 2',status:'进行中'},{id:uid(),name:'问题一图表整理',description:'统一标题和配色',owner:'队友 B',deadline:'2026-06-29',question:'问题 1',status:'已完成'}];
+  p.messages=[{id:uid(),sender:'队友 A',content:'清洗后的数据已经更新，异常日期单独做了标记。',time:'2026-06-24 18:20'},{id:uid(),sender:'宋清来',content:'收到，我今晚用新版数据重跑随机森林。',time:'2026-06-24 18:32'}];
+  p.decisions=[{id:uid(),title:'预测模型选择',content:'决定优先采用随机森林，而不是 LSTM。',reason:'当前数据量有限，随机森林的结果较稳定，训练时间更短。',time:'2026-06-25 22:00'}];
+  p.chapters=[{id:uid(),name:'问题分析',content:'根据附件数据和题目要求，本题需要先分析各品类销量的分布规律，再构建短期需求预测模型。',question:'问题 1',model:'描述性统计分析',experiment:'',done:true}];
+  const p2=newProject('2019 年国赛 A 题','高压油管压力控制问题，重点复习微分方程与优化。','已完成','2026-05-30'); p2.experiments=[{id:uid(),no:'EXP-001',name:'压力控制仿真',question:'问题 1',model:'微分方程模型',data:'pressure.csv',params:'步长=0.01',metrics:'RMSE：0.32',output:'result.csv',image:'',conclusion:'误差满足要求',status:'成功',time:'2026-05-25 20:00'}];p2.tasks=[{id:uid(),name:'论文整理',description:'',owner:'队员 A',deadline:'2026-05-28',question:'全部',status:'已完成'}];
+  const p3=newProject('2022 年国赛 B 题','无人机遂行编队飞行中的纯方位无源定位。','未开始','2026-08-10');
+  return {projects:[p,p2,p3],current:null,module:'analysis',nickname:'宋清来'};
+}
+let state;
+try{state=JSON.parse(localStorage.getItem('mcm-training-v1'))||seed()}catch(e){state=seed()}
+const save=(quiet=false)=>{let p=current();if(p)p.modified=now();localStorage.setItem('mcm-training-v1',JSON.stringify(state));if(window.cloudSyncSchedule)window.cloudSyncSchedule();if(!quiet){toast('已保存');const x=$('#saveState');if(x)x.textContent='刚刚已保存'}};
+const current=()=>state.projects.find(p=>p.id===state.current);
+const toast=msg=>{const r=$('#toastRoot');r.innerHTML=`<div class="toast">${esc(msg)}</div>`;setTimeout(()=>r.innerHTML='',1800)};
+const badge=s=>`<span class="badge ${s==='进行中'?'doing':s==='已完成'?'done':esc(s)}">${esc(s)}</span>`;
+const progress=()=>0; // 兼容旧版首屏渲染；新版首页不再计算或展示线性进度
+const empty=txt=>`<div class="empty"><div class="empty-icon">◇</div>${txt}</div>`;
+function render(){state.current?renderWorkspace():renderHome()}
+function renderHome(){
+  $('#app').innerHTML=`<div class="topbar"><div class="brand"><span class="logo">∑</span><span>数学建模训练记录助手</span></div><button class="btn primary" onclick="projectModal()">＋ 新建训练项目</button></div>
+  <main class="home"><div class="hero"><div><h1>数学建模训练项目</h1><p>集中整理题目、模型、实验与论文材料，让每一次训练都有迹可循。</p></div><div style="color:var(--muted)">共 ${state.projects.length} 个项目</div></div>
+  <div class="project-grid">${state.projects.map(p=>{let pc=progress(p);return `<article class="project-card" onclick="openProject('${p.id}')"><button class="icon-btn delete-project" title="删除" onclick="event.stopPropagation();removeProject('${p.id}')">×</button>${badge(p.status)}<h3>${esc(p.name)}</h3><div class="remark">${esc(p.note||'暂无备注')}</div><div class="meta-grid"><span>◷ ${esc(p.modified)}</span><span>⌁ 实验 ${p.experiments.length} 次</span><span>✓ 完成 ${p.tasks.filter(t=>t.status==='已完成').length} 项任务</span><span>⏳ ${p.deadline||'未设截止日期'}</span></div><div class="progress-row"><span>总体进度</span><b>${pc}%</b></div><div class="progress"><i style="width:${pc}%"></i></div></article>`}).join('')||empty('还没有训练项目，点击右上角开始第一次训练。')}</div></main>`;
+}
+function openProject(id){state.current=id;state.module='analysis';save(true);render()}
+function removeProject(id){if(confirm('确定删除这个训练项目吗？项目内全部记录也会被删除。')){state.projects=state.projects.filter(p=>p.id!==id);save();render()}}
+const nav=[['analysis','题干与题目分析'],['resources','附件与资料'],['data','数据管理'],['models','模型与代码'],['experiments','实验记录与结果'],['tasks','任务与讨论'],['paper','论文材料']];
+function renderWorkspace(){
+ const p=current();if(!p){state.current=null;return render()}
+ $('#app').innerHTML=`<div class="workspace"><header class="work-head"><button class="icon-btn mobile-menu" onclick="$('.sidebar').classList.toggle('open')">☰</button><button class="btn sm" onclick="goHome()">← 返回首页</button><div class="work-title">${esc(p.name)}</div>${badge(p.status)}<span class="save-state" id="saveState">最近保存：${esc(p.modified)}</span><input class="nickname" value="${esc(state.nickname)}" title="队员昵称" onchange="state.nickname=this.value;save()"></header>
+ <div class="layout"><aside class="sidebar">${nav.map(n=>`<button class="nav-btn ${state.module===n[0]?'active':''}" onclick="switchModule('${n[0]}')">${n[1]}</button>`).join('')}</aside><main class="content" id="moduleContent"></main></div></div>`;
+ renderModule();
+}
+function goHome(){state.current=null;save(true);render()}
+function switchModule(m){state.module=m;save(true);renderWorkspace();window.scrollTo(0,0)}
+function pageHead(title,sub,button=''){return `<div class="page-title"><div><h2>${title}</h2><p>${sub}</p></div>${button}</div>`}
+function renderModule(){({analysis:renderAnalysis,resources:renderResources,data:renderData,models:renderModels,experiments:renderExperiments,tasks:renderTasks,paper:renderPaper}[state.module]||renderAnalysis)()}
+function renderAnalysis(){
+ const p=current();$('#moduleContent').innerHTML=pageHead('题干与题目分析','记录对题目的完整理解，并逐步拆解各小问。')+
+ `<section class="card"><div class="card-head"><h3>1. 完整题干</h3><button class="btn sm primary" onclick="saveText('stem','stemText')">保存题干</button></div><textarea id="stemText" class="big-text" placeholder="请在这里粘贴完整题干">${esc(p.stem)}</textarea><div class="auto-save">支持直接粘贴和修改题干原文</div></section>
+ <section class="card"><div class="card-head"><h3>2. 小问拆解</h3><button class="btn sm primary" onclick="questionModal()">＋ 新增小问</button></div><div class="section-stack">${p.questions.map(q=>`<div class="item-card"><div class="item-top"><div>${badge(q.status)} <span class="item-title">${esc(q.name)}</span></div><div class="item-actions"><button class="btn sm" onclick="questionModal('${q.id}')">编辑</button><button class="icon-btn" onclick="removeItem('questions','${q.id}')">×</button></div></div><div class="detail-grid">${detail('原题要求',q.requirement)}${detail('当前理解',q.understanding)}${detail('准备解决的问题',q.goal)}${detail('计划使用的方法',q.method)}</div></div>`).join('')||empty('还没有拆解小问，先把题目要求分成可执行的小块吧。')}</div></section>
+ <section class="card"><div class="card-head"><h3>3. 解题思路</h3><button class="btn sm primary" onclick="saveText('idea','ideaText')">保存思路</button></div><textarea id="ideaText" class="big-text" placeholder="例如：数据清洗 → 描述性分析 → 预测 → 优化 → 敏感性分析 → 结果评价">${esc(p.idea)}</textarea></section>
+ <section class="card"><div class="card-head"><h3>4. 假设与约束</h3><button class="btn sm primary" onclick="assumptionModal()">＋ 新增假设</button></div><div class="section-stack">${p.assumptions.map(a=>`<div class="soft item-top"><div class="checkline"><input type="checkbox" ${a.confirmed?'checked':''} onchange="toggleField('assumptions','${a.id}','confirmed',this.checked)"><div><b>${esc(a.content)}</b><div class="item-meta">关联：${esc(a.question||'未关联')} · ${a.confirmed?'已确认':'待确认'}</div></div></div><button class="icon-btn" onclick="removeItem('assumptions','${a.id}')">×</button></div>`).join('')||empty('暂无假设与约束记录。')}</div></section>`;
+}
+const detail=(k,v)=>`<div class="detail"><b>${k}</b>${esc(v||'—').replace(/\n/g,'<br>')}</div>`;
+function saveText(field,id){current()[field]=$('#'+id).value;save()}
+function renderResources(){
+ const p=current(),types=['全部','赛题 PDF','官方附件','参考论文','网页资料','队友笔记','其他资料'];let filter=p.resourceFilter||'全部',list=filter==='全部'?p.resources:p.resources.filter(x=>x.type===filter);
+ $('#moduleContent').innerHTML=pageHead('附件与资料','归档原始资料，与实验输出保持清晰分离。',`<div style="display:flex;gap:8px"><button class="btn" onclick="resourceModal('file')">上传文件</button><button class="btn primary" onclick="resourceModal('link')">＋ 添加网页链接</button></div>`)+
+ `<section class="card"><div class="filterbar"><b>资料筛选</b><select onchange="current().resourceFilter=this.value;save(true);renderResources()">${types.map(x=>`<option ${x===filter?'selected':''}>${x}</option>`).join('')}</select><span style="color:var(--muted)">共 ${list.length} 条</span></div><div class="resource-grid">${list.map(r=>`<div class="item-card"><div class="resource-main"><div class="resource-icon">${r.type==='网页资料'?'↗':'▤'}</div><div style="min-width:0;flex:1"><div class="item-top"><div class="item-title">${esc(r.name)}</div><button class="icon-btn" onclick="removeItem('resources','${r.id}')">×</button></div><div class="item-meta">${badge(r.type)} <span>${esc(r.time)}</span><span>关联：${esc(r.question||'未关联')}</span></div><div>${esc(r.note||'暂无备注')}</div><div style="margin-top:11px"><button class="btn sm" onclick="${r.link?`window.open('${esc(r.link)}','_blank')`:`toast('原型中已模拟文件：${esc(r.name)}')`}">${r.link?'打开链接':'下载 / 打开'}</button></div></div></div></div>`).join('')||empty('当前分类下没有资料。')}</div></section>`;
+}
+function renderData(){
+ const p=current(),color={'原始数据':'raw','清洗后数据':'clean','特征工程数据':'feature','中间结果':'middle','最终结果':'final'};
+ $('#moduleContent').innerHTML=pageHead('数据管理','用清晰的数据版本链路，避免“到底用了哪个文件”的混乱。','<button class="btn primary" onclick="dataModal()">＋ 新增数据记录</button>')+
+ `<div class="filterbar">${Object.keys(color).map(t=>`<span class="badge"><i class="data-color ${color[t]}" style="width:8px;height:8px;border-radius:50%;margin-right:6px"></i>${t}</span>`).join('')}</div><div class="section-stack">${p.data.map(d=>`<div class="data-row"><div class="data-color ${color[d.type]}"></div><div class="data-body"><div class="item-top"><div><span class="item-title">${esc(d.file)}</span> ${badge(d.type)}</div></div><div class="item-meta"><span>${esc(d.name)}</span><span>来源：${esc(d.source||'—')}</span><span>关联：${esc(d.question||'—')}</span><span>${esc(d.time)}</span></div><div>${esc(d.description||'暂无处理说明')}</div></div><div class="data-actions"><button class="btn sm" onclick="dataModal('${d.id}')">编辑</button><button class="icon-btn" onclick="removeItem('data','${d.id}')">×</button></div></div>`).join('')||empty('还没有数据版本，新增第一份原始数据吧。')}</div>`;
+}
+function renderModels(){
+ const p=current();$('#moduleContent').innerHTML=pageHead('模型与代码','记录每一次模型选择及其依据，保留被放弃方案的价值。','<button class="btn primary" onclick="modelModal()">＋ 新增模型</button>')+
+ `<section class="card"><div class="card-head"><h3>模型对比表</h3><span style="color:var(--muted)">${p.models.length} 个模型</span></div><div class="table-wrap"><table class="compare-table"><thead><tr><th>模型名称</th><th>对应问题</th><th>优点</th><th>局限性</th><th>当前状态</th></tr></thead><tbody>${p.models.map(m=>`<tr><td><b>${esc(m.name)}</b></td><td>${esc(m.question)}</td><td>${esc(m.pros)}</td><td>${esc(m.cons)}</td><td>${badge(m.status)}</td></tr>`).join('')||'<tr><td colspan="5">暂无模型</td></tr>'}</tbody></table></div></section>
+ <div class="model-grid">${p.models.map(m=>`<div class="item-card"><div class="item-top"><div><div class="item-title">${esc(m.name)}</div><div class="item-meta">${badge(m.type)} ${badge(m.status)} <span>${esc(m.question)}</span></div></div><div class="item-actions"><button class="btn sm" onclick="modelModal('${m.id}')">编辑</button><button class="icon-btn" onclick="removeItem('models','${m.id}')">×</button></div></div><div class="detail-grid">${detail('解决什么问题',m.problem)}${detail('基本原理',m.principle)}${detail('输入变量',m.input)}${detail('输出变量',m.output)}${detail('优点',m.pros)}${detail('局限性',m.cons)}${detail('代码',m.code)}${detail('备注',m.note)}</div></div>`).join('')||empty('还没有模型记录。')}</div>`;
+}
+function parseMetrics(s){const o={};String(s||'').split(/\n|,|，/).forEach(x=>{let m=x.match(/(MAE|RMSE|R²|R2)\s*[：:]\s*(-?[\d.]+)/i);if(m)o[m[1].toUpperCase().replace('R2','R²')]=+m[2]});return o}
+function renderExperiments(){
+ const p=current(),selected=p.selectedExperiments||[];let ex=[...p.experiments].sort((a,b)=>String(b.time).localeCompare(String(a.time)));let picked=ex.filter(x=>selected.includes(x.id));
+ $('#moduleContent').innerHTML=pageHead('实验记录与结果','每次运行都留下参数、数据、指标与结论，让改进过程可复现。','<button class="btn primary" onclick="experimentModal()">＋ 新增实验记录</button>')+
+ `<section class="card"><div class="card-head"><h3>实验结果对比</h3><span style="color:var(--muted)">勾选下方实验即可自动对比</span></div>${picked.length?renderComparison(picked):empty('请至少勾选一条实验记录进行对比。')}</section>
+ <section><div class="card-head"><h3>全部实验 · ${ex.length}</h3><span style="color:var(--muted)">默认按时间从新到旧</span></div><div class="section-stack">${ex.map(e=>`<div class="item-card"><div class="item-top"><div class="checkline"><input type="checkbox" ${selected.includes(e.id)?'checked':''} onchange="toggleExperiment('${e.id}',this.checked)"><div><div class="item-title">${esc(e.no)} · ${esc(e.name)}</div><div class="item-meta">${badge(e.status)} <span>${esc(e.time)}</span><span>${esc(e.question)}</span><span>模型：${esc(e.model)}</span></div></div></div><div class="item-actions"><button class="btn sm" onclick="experimentModal('${e.id}')">编辑</button><button class="icon-btn" onclick="removeItem('experiments','${e.id}')">×</button></div></div><div class="detail-grid">${detail('数据版本',e.data)}${detail('参数设置',e.params)}${detail('评价指标',e.metrics)}${detail('输出结果',e.output+(e.image?' · '+e.image:''))}</div><div class="soft" style="margin-top:10px"><b>实验结论：</b>${esc(e.conclusion||'—')}</div></div>`).join('')||empty('还没有实验记录，第一次运行模型后就来记一笔吧。')}</div></section>`;
+}
+function renderComparison(exs){
+ const metrics=['MAE','RMSE','R²'];return `<div class="table-wrap"><table class="compare-table"><thead><tr><th>实验</th>${metrics.map(m=>`<th>${m}</th>`).join('')}<th>状态</th></tr></thead><tbody>${exs.map(e=>{let x=parseMetrics(e.metrics);return `<tr><td>${esc(e.no)} · ${esc(e.name)}</td>${metrics.map(m=>`<td>${x[m]??'—'}</td>`).join('')}<td>${badge(e.status)}</td></tr>`}).join('')}</tbody></table></div><div class="charts" style="margin-top:16px">${metrics.map(m=>{let vals=exs.map(e=>parseMetrics(e.metrics)[m]).filter(Number.isFinite),max=Math.max(...vals,1);return `<div class="chart"><h4>${m} 对比</h4><div class="bars">${exs.map(e=>{let v=parseMetrics(e.metrics)[m];return `<div class="bar-wrap"><span class="bar-val">${v??'—'}</span><div class="bar" style="height:${Number.isFinite(v)?Math.max(3,v/max*88):0}%"></div><span class="bar-name">${esc(e.no)}</span></div>`}).join('')}</div></div>`}).join('')}</div>`;
+}
+function toggleExperiment(id,on){let a=current().selectedExperiments||[];current().selectedExperiments=on?[...new Set([...a,id])]:a.filter(x=>x!==id);save(true);renderExperiments()}
+function renderTasks(){
+ const p=current(),cols=['待办','进行中','已完成'];$('#moduleContent').innerHTML=pageHead('任务与讨论','把工作分清楚，也把关键讨论沉淀下来。','<button class="btn primary" onclick="taskModal()">＋ 新增任务</button>')+
+ `<section class="card"><div class="card-head"><h3>任务看板</h3><span style="color:var(--muted)">通过下拉菜单切换任务状态</span></div><div class="kanban">${cols.map(c=>`<div class="kanban-col"><div class="kanban-head"><span>${c}</span><span class="badge">${p.tasks.filter(t=>t.status===c).length}</span></div>${p.tasks.filter(t=>t.status===c).map(t=>`<div class="task"><div class="item-top"><b>${esc(t.name)}</b><button class="icon-btn" onclick="removeItem('tasks','${t.id}')">×</button></div><div style="color:var(--muted);margin:5px 0">${esc(t.description||'暂无说明')}</div><div class="item-meta"><span>负责人：${esc(t.owner)}</span><span>截止：${esc(t.deadline||'—')}</span><span>${esc(t.question)}</span></div><select onchange="changeTask('${t.id}',this.value)">${cols.map(x=>`<option ${x===t.status?'selected':''}>${x}</option>`).join('')}</select></div>`).join('')||'<div class="empty" style="padding:20px 8px">暂无任务</div>'}</div>`).join('')}</div></section>
+ <div class="grid2"><section class="card"><div class="card-head"><h3>讨论区</h3><span style="color:var(--muted)">${p.messages.length} 条消息</span></div><div class="discussion">${p.messages.map(m=>`<div class="message"><div class="avatar">${esc(m.sender.slice(0,1))}</div><div class="bubble"><div class="bubble-head"><b>${esc(m.sender)}</b><span>${esc(m.time)} <button class="icon-btn" onclick="removeItem('messages','${m.id}')">×</button></span></div>${esc(m.content)}</div></div>`).join('')||empty('还没有讨论消息。')}</div><div class="sendbox"><input id="messageInput" placeholder="记录一个想法或进展…" onkeydown="if(event.key==='Enter')sendMessage()"><button class="btn primary" onclick="sendMessage()">发送</button></div></section>
+ <section class="card"><div class="card-head"><h3>重要决策记录</h3><button class="btn sm primary" onclick="decisionModal()">＋ 记录决策</button></div>${p.decisions.map(d=>`<div class="decision"><div class="item-top"><b>${esc(d.title)}</b><button class="icon-btn" onclick="removeItem('decisions','${d.id}')">×</button></div><div>${esc(d.content)}</div><div style="color:#82621e;margin-top:5px">原因：${esc(d.reason)}</div><div class="item-meta">${esc(d.time)}</div></div>`).join('')||empty('关键选择会影响整篇论文，把理由也一起记下来。')}</section></div>`;
+}
+function renderPaper(){
+ const p=current();$('#moduleContent').innerHTML=pageHead('论文材料','集中整理写作素材，但始终保留你们自己的分析与表达。','<button class="btn primary" onclick="exportPaper()">⇩ 导出论文材料</button>')+
+ `<section class="card"><div class="card-head"><h3>1. 论文大纲</h3><button class="btn sm primary" onclick="saveText('outline','outlineText')">保存大纲</button></div><textarea id="outlineText" class="big-text">${esc(p.outline)}</textarea></section>
+ <section class="card"><div class="card-head"><h3>2. 章节材料</h3><button class="btn sm primary" onclick="chapterModal()">＋ 新增章节材料</button></div><div class="section-stack">${p.chapters.map(c=>`<div class="item-card"><div class="item-top"><div><span class="item-title">${esc(c.name)}</span> ${badge(c.done?'已完成':'进行中')}</div><div class="item-actions"><button class="btn sm" onclick="chapterModal('${c.id}')">编辑</button><button class="icon-btn" onclick="removeItem('chapters','${c.id}')">×</button></div></div><div class="item-meta"><span>小问：${esc(c.question||'—')}</span><span>模型：${esc(c.model||'—')}</span><span>实验：${esc(c.experiment||'—')}</span></div><div class="soft">${esc(c.content||'暂无正文材料').replace(/\n/g,'<br>')}</div></div>`).join('')||empty('把分析、模型和实验结论整理为可直接写入论文的素材。')}</div></section>
+ <section class="card"><div class="card-head"><h3>3. 写作检查清单</h3><button class="btn sm primary" onclick="checkModal()">＋ 新增检查项</button></div>${p.checks.map(c=>`<div class="check-item ${c.done?'done':''}"><input type="checkbox" ${c.done?'checked':''} onchange="toggleField('checks','${c.id}','done',this.checked)"><span>${esc(c.text)}</span><button class="icon-btn" onclick="removeItem('checks','${c.id}')">×</button></div>`).join('')||empty('暂无检查项。')}</section>`;
+}
+function changeTask(id,status){current().tasks.find(x=>x.id===id).status=status;save();renderTasks()}
+function sendMessage(){let i=$('#messageInput'),v=i.value.trim();if(!v)return toast('请输入消息内容');current().messages.push({id:uid(),sender:state.nickname||'队员',content:v,time:now()});save();renderTasks()}
+function toggleField(arr,id,key,value){let x=current()[arr].find(x=>x.id===id);if(x)x[key]=value;save();renderModule()}
+function removeItem(arr,id){if(confirm('确定删除这条记录吗？')){current()[arr]=current()[arr].filter(x=>x.id!==id);if(arr==='experiments')current().selectedExperiments=(current().selectedExperiments||[]).filter(x=>x!==id);save();renderModule()}}
+function showModal(title,fields,onSubmit,submit='保存'){
+ const root=$('#modalRoot');root.innerHTML=`<div class="modal-backdrop" onclick="if(event.target===this)closeModal()"><form class="modal" id="modalForm"><div class="modal-head"><h3>${title}</h3><button type="button" class="icon-btn" onclick="closeModal()">×</button></div><div class="modal-body"><div class="form-grid">${fields}</div></div><div class="modal-foot"><button type="button" class="btn" onclick="closeModal()">取消</button><button class="btn primary">${submit}</button></div></form></div>`;$('#modalForm').onsubmit=e=>{e.preventDefault();let fd=Object.fromEntries(new FormData(e.target));onSubmit(fd);closeModal();save();render()};
+}
+function closeModal(){$('#modalRoot').innerHTML=''}
+const field=(name,label,value='',type='text',opts=[])=>`<div class="field ${type==='textarea'?'span2':''}"><label>${label}</label>${type==='textarea'?`<textarea name="${name}">${esc(value)}</textarea>`:type==='select'?`<select name="${name}">${opts.map(x=>`<option ${x===value?'selected':''}>${esc(x)}</option>`).join('')}</select>`:`<input name="${name}" type="${type}" value="${esc(value)}" ${name==='name'?'required':''}>`}</div>`;
+function upsert(arr,id,data,defaults={}){let a=current()[arr],x=a.find(x=>x.id===id);if(x)Object.assign(x,data);else a.push({id:uid(),...defaults,...data})}
+function projectModal(){showModal('新建训练项目',field('name','题目名称')+field('status','当前状态','未开始','select',['未开始','进行中','已完成'])+field('deadline','截止日期','','date')+field('note','题目备注','','textarea'),d=>state.projects.unshift({...newProject(d.name,d.note,d.status,d.deadline)}),'创建项目')}
+function questionModal(id){let x=current().questions.find(x=>x.id===id)||{};showModal(id?'编辑小问':'新增小问',field('name','小问名称',x.name)+field('status','当前状态',x.status||'未开始','select',['未开始','进行中','已完成'])+field('requirement','原题要求',x.requirement,'textarea')+field('understanding','当前理解',x.understanding,'textarea')+field('goal','准备解决什么问题',x.goal,'textarea')+field('method','计划使用的方法',x.method,'textarea'),d=>upsert('questions',id,d))}
+function assumptionModal(){showModal('新增假设与约束',field('content','假设内容','','textarea')+field('question','关联小问')+`<div class="field"><label>是否已确认</label><select name="confirmed"><option value="false">待确认</option><option value="true">已确认</option></select></div>`,d=>{d.confirmed=d.confirmed==='true';upsert('assumptions',null,d)})}
+function resourceModal(kind){showModal(kind==='link'?'添加网页链接':'上传文件（模拟）',field('name','资料名称')+field('type','资料类别',kind==='link'?'网页资料':'官方附件','select',['赛题 PDF','官方附件','参考论文','网页资料','队友笔记','其他资料'])+field('question','关联小问')+(kind==='link'?field('link','网页地址','','url'):field('file','选择文件','','file'))+field('note','备注','','textarea'),d=>upsert('resources',null,{...d,time:now()}),'添加资料')}
+function dataModal(id){let x=current().data.find(x=>x.id===id)||{};showModal(id?'编辑数据记录':'新增数据记录',field('name','数据名称',x.name)+field('type','数据类别',x.type||'原始数据','select',['原始数据','清洗后数据','特征工程数据','中间结果','最终结果'])+field('file','文件或文件名称',x.file)+field('source','数据来源',x.source)+field('question','对应小问',x.question)+field('description','数据处理说明',x.description,'textarea'),d=>upsert('data',id,d,{time:now()}))}
+function modelModal(id){let x=current().models.find(x=>x.id===id)||{};showModal(id?'编辑模型':'新增模型',field('name','模型名称',x.name)+field('question','对应小问',x.question)+field('type','模型类别',x.type||'预测','select',['预测','优化','分类','聚类','评价','仿真','其他'])+field('status','当前状态',x.status||'待测试','select',['待测试','备选','已采用','已废弃'])+field('problem','解决什么问题',x.problem,'textarea')+field('principle','基本原理',x.principle,'textarea')+field('input','输入变量',x.input)+field('output','输出变量',x.output)+field('pros','优点',x.pros,'textarea')+field('cons','局限性',x.cons,'textarea')+field('code','代码链接或文件名',x.code)+field('note','备注',x.note,'textarea'),d=>upsert('models',id,d))}
+function experimentModal(id){let x=current().experiments.find(x=>x.id===id)||{},next='EXP-'+String(current().experiments.length+1).padStart(3,'0');showModal(id?'编辑实验记录':'新增实验记录',field('no','实验编号',x.no||next)+field('name','实验名称',x.name)+field('question','对应小问',x.question)+field('model','使用模型',x.model)+field('data','使用的数据版本',x.data)+field('status','实验状态',x.status||'成功','select',['成功','失败','备选','已采用'])+field('params','参数设置',x.params,'textarea')+field('metrics','评价指标（每行一项，如 MAE：18.42）',x.metrics,'textarea')+field('output','输出结果文件',x.output)+field('image','图表或图片名称',x.image)+field('conclusion','实验结论',x.conclusion,'textarea'),d=>upsert('experiments',id,d,{time:now()}))}
+function taskModal(){showModal('新增任务',field('name','任务名称')+field('owner','负责人',state.nickname)+field('deadline','截止日期','','date')+field('question','关联小问')+field('status','当前状态','待办','select',['待办','进行中','已完成'])+field('description','任务说明','','textarea'),d=>upsert('tasks',null,d))}
+function decisionModal(){showModal('记录重要决策',field('title','决策标题')+field('content','决定内容','','textarea')+field('reason','做出该决定的原因','','textarea'),d=>upsert('decisions',null,{...d,time:now()}))}
+function chapterModal(id){let x=current().chapters.find(x=>x.id===id)||{};showModal(id?'编辑章节材料':'新增章节材料',field('name','章节名称',x.name)+field('question','关联小问',x.question)+field('model','关联模型',x.model)+field('experiment','关联实验',x.experiment)+field('done','完成状态',String(!!x.done),'select',['false','true'])+field('content','正文材料',x.content,'textarea'),d=>{d.done=d.done==='true';upsert('chapters',id,d)})}
+function checkModal(){showModal('新增检查项',field('text','检查内容'),d=>upsert('checks',null,{...d,done:false}))}
+function exportPaper(){
+ const p=current();let md=`# ${p.name} · 论文材料\n\n## 论文大纲\n\n${p.outline}\n\n## 章节材料\n\n`;
+ p.chapters.forEach(c=>md+=`### ${c.name}\n\n${c.content||''}\n\n- 关联小问：${c.question||'无'}\n- 关联模型：${c.model||'无'}\n- 关联实验：${c.experiment||'无'}\n- 状态：${c.done?'已完成':'未完成'}\n\n`);
+ md+=`## 写作检查清单\n\n`+p.checks.map(c=>`- [${c.done?'x':' '}] ${c.text}`).join('\n');
+ let blob=new Blob([md],{type:'text/markdown;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=p.name+'-论文材料.md';a.click();URL.revokeObjectURL(a.href);toast('论文材料已导出')}
+render();
+</script>
+<style>
+  .home-empty{grid-column:1/-1;background:#fff;border:1px dashed #c9d7ea;border-radius:16px;min-height:330px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:36px;box-shadow:var(--shadow)}
+  .home-empty-icon{width:70px;height:70px;border-radius:22px;background:var(--blue2);color:var(--blue);font-size:32px;display:grid;place-items:center;margin-bottom:18px}
+  .home-empty h2{font-size:21px;margin:0 0 7px}.home-empty p{color:var(--muted);margin:0 0 22px}
+  .final-tag{display:inline-flex;align-items:center;gap:4px;border-radius:99px;padding:3px 9px;background:#fff1c7;color:#9a6200;font-size:12px;font-weight:800;border:1px solid #f3d783}
+  .final-toggle.active{background:#fff7df;border-color:#efcd69;color:#925c00}
+  .filter-switch{display:inline-flex;gap:8px;align-items:center;background:#fff;border:1px solid var(--line);padding:7px 11px;border-radius:9px;color:#536176}
+  .filter-switch input{width:auto}
+  .idea-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+  .idea-card{border:1px solid var(--line);border-radius:10px;padding:14px;background:#fff}
+  .idea-card select{margin-top:9px;padding:6px}
+  .paper-layout{display:grid;grid-template-columns:210px minmax(430px,1fr) 280px;gap:17px;align-items:start}
+  .paper-panel{background:#fff;border:1px solid var(--line);border-radius:13px;box-shadow:var(--shadow);overflow:hidden}
+  .paper-panel-head{padding:14px 15px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .paper-toc{padding:10px}.toc-item{display:flex;align-items:center;gap:5px;margin:3px 0}.toc-select{flex:1;border:0;background:transparent;text-align:left;padding:9px 10px;border-radius:8px;color:#536176;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .toc-select:hover{background:#f5f8fc}.toc-item.active .toc-select{background:var(--blue2);color:#286bd8;font-weight:800}.toc-actions{display:none;gap:1px}.toc-item:hover .toc-actions,.toc-item.active .toc-actions{display:flex}.toc-actions .icon-btn{width:25px;height:25px;font-size:13px}
+  .paper-center{min-width:0}.paper-sheet{background:#fff;min-height:720px;border:1px solid #dce4ef;border-radius:3px;box-shadow:0 8px 24px rgba(30,50,80,.09);padding:58px 64px;margin-bottom:17px}
+  .paper-title-input{border:0;border-bottom:1px solid transparent;border-radius:0;text-align:center;font-size:25px;font-weight:800;padding:7px;margin-bottom:26px}.paper-title-input:focus{box-shadow:none;border-bottom-color:#b6c9e6}
+  .paper-editor{min-height:520px;outline:none;font:16px/2 "SimSun","Songti SC",serif;white-space:pre-wrap;color:#252d38}.paper-editor:empty:before{content:"从这里开始撰写本章节正文……";color:#a5afbd}.paper-editor mark{background:#fff0a8;border-radius:3px;padding:1px 2px;scroll-margin-top:120px}.paper-editor mark.resolved{background:#e9edf2;color:#6f7987}
+  .paper-footer{border-top:1px solid #edf1f6;margin-top:25px;padding-top:10px;color:var(--muted);text-align:right;font-size:12px}
+  .material-box{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:17px}
+  .comment-panel{position:sticky;top:88px;max-height:calc(100vh - 110px);display:flex;flex-direction:column}
+  .comment-filter{padding:10px 13px;display:flex;gap:6px}.comment-filter .btn.active{background:var(--blue2);color:var(--blue);border-color:#c5d8fa}
+  .comment-list{padding:0 12px 13px;overflow:auto}.comment-card{border:1px solid var(--line);border-left:3px solid #efc04f;border-radius:9px;padding:11px;margin-bottom:10px;cursor:pointer;background:#fff}.comment-card:hover{border-color:#a9c5f4}.comment-card.resolved{opacity:.58;border-left-color:#aab5c3;background:#f8fafc}.comment-quote{font-size:12px;color:#7b6b37;background:#fff9e8;border-radius:6px;padding:6px 8px;margin:7px 0;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+  .comment-body{font-weight:700;margin:5px 0}.comment-meta{font-size:11px;color:var(--muted)}.comment-actions{display:flex;gap:5px;margin-top:8px}
+  .paper-save-hint{display:inline-flex;align-items:center;color:var(--green);font-size:12px;margin-right:8px}
+  @media(max-width:1150px){.paper-layout{grid-template-columns:180px minmax(400px,1fr)}.comment-panel{grid-column:1/-1;position:static;max-height:none}.comment-list{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.paper-sheet{padding:45px}}
+  @media(max-width:760px){.idea-grid{grid-template-columns:1fr}.paper-layout{display:block}.paper-panel,.paper-center{margin-bottom:14px}.paper-toc{display:flex;overflow-x:auto}.toc-item{flex:none}.toc-actions{display:flex}.paper-sheet{min-height:600px;padding:30px 22px}.paper-editor{min-height:420px}.comment-list{display:block}.comment-panel{max-height:none}.paper-title-input{font-size:21px}}
+</style>
+<script>
+/* 2026-06 功能升级：空首页、论文写作批注、待验证想法与最终采用标记 */
+const defaultPaperTitles=['摘要','问题重述','问题分析','模型假设','符号说明','模型建立','模型求解','结果分析','模型评价','模型推广','参考文献','附录'];
+function ensureProjectV2(p){
+  p.ideas=p.ideas||[];
+  p.comments=p.comments||[];
+  p.paperSections=p.paperSections||defaultPaperTitles.map(title=>({id:uid(),title,bodyHtml:''}));
+  p.selectedSectionId=p.selectedSectionId||p.paperSections[0]?.id||null;
+  p.commentFilter=p.commentFilter||'全部';
+  p.modelFinalOnly=!!p.modelFinalOnly;p.experimentFinalOnly=!!p.experimentFinalOnly;p.materialFinalOnly=!!p.materialFinalOnly;
+  (p.models||[]).forEach(x=>x.final=!!x.final);
+  (p.experiments||[]).forEach(x=>{x.final=!!x.final;x.finalImage=!!x.finalImage});
+  (p.chapters||[]).forEach(x=>x.final=!!x.final);
+  return p;
+}
+const demoProjectNames=['2023 年国赛 C 题','2019 年国赛 A 题','2022 年国赛 B 题'];
+if(!localStorage.getItem('mcm-training-upgrade-v2')){
+  state.projects=(state.projects||[]).filter(p=>!demoProjectNames.includes(p.name));
+  localStorage.setItem('mcm-training-upgrade-v2','1');
+}
+state.projects=(state.projects||[]).map(ensureProjectV2);
+if(state.current&&!state.projects.some(p=>p.id===state.current))state.current=null;
+
+function renderHome(){
+  $('#app').innerHTML=`<div class="topbar"><div class="brand"><span class="logo">∑</span><span>数学建模训练记录助手</span></div><button class="btn primary" onclick="projectModal()">＋ 新建训练项目</button></div>
+  <main class="home"><div class="hero"><div><h1>数学建模训练项目</h1><p>集中整理题目、模型、实验与论文材料，让每一次训练都有迹可循。</p></div><div style="color:var(--muted)">共 ${state.projects.length} 个项目</div></div>
+  <div class="project-grid">${state.projects.length?state.projects.map(p=>{let pc=progress(p);return `<article class="project-card" onclick="openProject('${p.id}')"><button class="icon-btn delete-project" title="删除" onclick="event.stopPropagation();removeProject('${p.id}')">×</button>${badge(p.status)}<h3>${esc(p.name)}</h3><div class="remark">${esc(p.note||'暂无备注')}</div><div class="meta-grid"><span>◷ ${esc(p.modified)}</span><span>⌁ 实验 ${p.experiments.length} 次</span><span>✓ 完成 ${p.tasks.filter(t=>t.status==='已完成').length} 项任务</span><span>⏳ ${p.deadline||'未设截止日期'}</span></div><div class="progress-row"><span>总体进度</span><b>${pc}%</b></div><div class="progress"><i style="width:${pc}%"></i></div></article>`}).join(''):`<section class="home-empty"><div class="home-empty-icon">▤</div><h2>还没有训练项目</h2><p>点击右上角“新建训练项目”，开始整理一道数学建模题。</p><button class="btn primary" onclick="projectModal()">＋ 新建第一个训练项目</button></section>`}</div></main>`;
+}
+function projectModal(){showModal('新建训练项目',field('name','题目名称')+field('status','当前状态','未开始','select',['未开始','进行中','已完成'])+field('deadline','截止日期','','date')+field('note','题目备注','','textarea'),d=>{const p=ensureProjectV2(newProject(d.name,d.note,d.status,d.deadline));state.projects.unshift(p)},'创建项目')}
+
+const renderModelsV1=renderModels;
+renderModels=function(){
+  const p=current(),all=p.models,shown=p.modelFinalOnly?all.filter(x=>x.final):all;
+  p.models=shown;renderModelsV1();p.models=all;
+  const title=$('#moduleContent .page-title');title.insertAdjacentHTML('afterend',`<div class="filterbar"><label class="filter-switch"><input type="checkbox" ${p.modelFinalOnly?'checked':''} onchange="current().modelFinalOnly=this.checked;save(true);renderModels()">仅看最终采用内容</label><span style="color:var(--muted)">显示 ${shown.length} / ${all.length} 个模型</span></div>`);
+  [...document.querySelectorAll('.model-grid>.item-card')].forEach((card,i)=>{const m=shown[i],top=card.querySelector('.item-top>div');if(m.final)top.insertAdjacentHTML('afterbegin','<span class="final-tag">★ 最终采用</span> ');card.querySelector('.item-actions').insertAdjacentHTML('afterbegin',`<button class="btn sm final-toggle ${m.final?'active':''}" onclick="toggleFinal('models','${m.id}')">${m.final?'取消采用':'标为最终采用'}</button>`)});
+}
+const renderExperimentsV1=renderExperiments;
+renderExperiments=function(){
+  const p=current(),all=p.experiments,shown=p.experimentFinalOnly?all.filter(x=>x.final||x.finalImage):all;
+  p.experiments=shown;renderExperimentsV1();p.experiments=all;
+  const title=$('#moduleContent .page-title');title.insertAdjacentHTML('afterend',`<div class="filterbar"><label class="filter-switch"><input type="checkbox" ${p.experimentFinalOnly?'checked':''} onchange="current().experimentFinalOnly=this.checked;save(true);renderExperiments()">仅看最终采用实验 / 图表</label><span style="color:var(--muted)">显示 ${shown.length} / ${all.length} 条</span></div>`);
+  const sorted=[...shown].sort((a,b)=>String(b.time).localeCompare(String(a.time)));
+  [...document.querySelectorAll('#moduleContent section:last-child .item-card')].forEach((card,i)=>{const e=sorted[i],titleBox=card.querySelector('.checkline>div');if(e.final)titleBox.insertAdjacentHTML('afterbegin','<span class="final-tag">★ 最终采用实验</span> ');if(e.image&&e.finalImage)titleBox.insertAdjacentHTML('afterbegin','<span class="final-tag">▧ 最终采用图表</span> ');const actions=card.querySelector('.item-actions');actions.insertAdjacentHTML('afterbegin',`${e.image?`<button class="btn sm final-toggle ${e.finalImage?'active':''}" onclick="toggleFinalImage('${e.id}')">${e.finalImage?'取消图表采用':'采用图表'}</button>`:''}<button class="btn sm final-toggle ${e.final?'active':''}" onclick="toggleFinal('experiments','${e.id}')">${e.final?'取消采用':'采用实验'}</button>`)});
+}
+function toggleFinal(arr,id){if(state.module==='paper')savePaperBody(true);const x=current()[arr].find(v=>v.id===id);if(x)x.final=!x.final;save();renderModule()}
+function toggleFinalImage(id){const x=current().experiments.find(v=>v.id===id);if(x)x.finalImage=!x.finalImage;save();renderExperiments()}
+
+const renderTasksV1=renderTasks;
+renderTasks=function(){
+  const p=current();renderTasksV1();
+  $('#moduleContent').insertAdjacentHTML('beforeend',`<section class="card"><div class="card-head"><div><h3>待验证问题 / 临时想法</h3><div style="color:var(--muted);font-size:12px;margin-top:3px">先记下来，再用数据和实验说话。</div></div><button class="btn sm primary" onclick="ideaModal()">＋ 添加问题或想法</button></div><div class="idea-grid">${p.ideas.map(x=>`<div class="idea-card"><div class="item-top"><b>${esc(x.content)}</b><button class="icon-btn" onclick="removeItem('ideas','${x.id}')">×</button></div><div class="item-meta"><span>${esc(x.author)}</span><span>关联：${esc(x.question||'未关联')}</span></div><div style="color:var(--muted)">${esc(x.note||'暂无备注')}</div><select onchange="updateIdeaStatus('${x.id}',this.value)">${['待验证','已验证','已放弃'].map(s=>`<option ${s===x.status?'selected':''}>${s}</option>`).join('')}</select></div>`).join('')||empty('暂无待验证问题。遇到不确定的判断时，先放在这里。')}</div></section>`);
+}
+function ideaModal(){showModal('添加待验证问题 / 临时想法',field('content','问题或想法','','textarea')+field('question','关联小问')+field('author','提出人昵称',state.nickname||'队员')+field('status','当前状态','待验证','select',['待验证','已验证','已放弃'])+field('note','备注','','textarea'),d=>upsert('ideas',null,d))}
+function updateIdeaStatus(id,status){const x=current().ideas.find(v=>v.id===id);if(x)x.status=status;save();renderTasks()}
+
+function selectedPaperSection(){const p=current();return p.paperSections.find(s=>s.id===p.selectedSectionId)||p.paperSections[0]}
+function textFromHtml(html){const box=document.createElement('div');box.innerHTML=html||'';return box.innerText||box.textContent||''}
+function renderPaper(){
+  const p=ensureProjectV2(current()),sec=selectedPaperSection(),comments=p.comments.filter(c=>c.sectionId===sec.id&&(p.commentFilter==='全部'||c.status===p.commentFilter)),materials=p.materialFinalOnly?p.chapters.filter(x=>x.final):p.chapters;
+  $('#moduleContent').innerHTML=pageHead('论文材料','像写文档一样组织正文，把模型、实验材料和修改意见汇到一起。',`<div><span class="paper-save-hint" id="paperSaveState">正文已保存</span><button class="btn" onclick="savePaperBody()">保存正文</button> <button class="btn primary" onclick="exportPaper()">⇩ 导出论文材料</button></div>`)+
+  `<div class="paper-layout"><aside class="paper-panel"><div class="paper-panel-head"><b>论文目录</b><button class="btn sm primary" onclick="sectionModal()">＋ 章节</button></div><div class="paper-toc">${p.paperSections.map(s=>`<div class="toc-item ${s.id===sec.id?'active':''}"><button class="toc-select" onclick="selectPaperSection('${s.id}')">${esc(s.title)}</button><span class="toc-actions"><button class="icon-btn" title="重命名" onclick="renameSection('${s.id}')">✎</button><button class="icon-btn" title="删除" onclick="deleteSection('${s.id}')">×</button></span></div>`).join('')}</div></aside>
+  <main class="paper-center"><article class="paper-sheet"><input class="paper-title-input" id="paperTitle" value="${esc(sec.title)}" onchange="renameSectionDirect(this.value)"><div id="paperEditor" class="paper-editor" contenteditable="true" oninput="paperChanged()">${sec.bodyHtml||''}</div><div class="paper-footer"><span id="paperWordCount">${textFromHtml(sec.bodyHtml).replace(/\s/g,'').length}</span> 字</div></article>
+  <section class="material-box"><div class="card-head"><div><h3>章节材料</h3><span style="color:var(--muted);font-size:12px">可将素材插入当前“${esc(sec.title)}”正文</span></div><button class="btn sm primary" onclick="chapterModal()">＋ 新增材料</button></div><div class="filterbar"><label class="filter-switch"><input type="checkbox" ${p.materialFinalOnly?'checked':''} onchange="setMaterialFinalFilter(this.checked)">仅看最终采用内容</label></div><div class="section-stack">${materials.map(c=>`<div class="item-card"><div class="item-top"><div><span class="item-title">${esc(c.name)}</span> ${c.final?'<span class="final-tag">★ 最终采用</span>':''}</div><div class="item-actions"><button class="btn sm" onclick="insertMaterial('${c.id}')">插入正文</button><button class="btn sm final-toggle ${c.final?'active':''}" onclick="toggleFinal('chapters','${c.id}')">${c.final?'取消采用':'标为最终采用'}</button><button class="btn sm" onclick="chapterModal('${c.id}')">编辑</button><button class="icon-btn" onclick="removeItem('chapters','${c.id}')">×</button></div></div><div class="item-meta"><span>小问：${esc(c.question||'—')}</span><span>模型：${esc(c.model||'—')}</span><span>实验：${esc(c.experiment||'—')}</span></div><div class="soft">${esc(c.content||'暂无正文材料').replace(/\n/g,'<br>')}</div></div>`).join('')||empty('还没有章节材料。')}</div></section>
+  <section class="material-box"><div class="card-head"><h3>写作检查清单</h3><button class="btn sm primary" onclick="checkModal()">＋ 新增检查项</button></div>${p.checks.map(c=>`<div class="check-item ${c.done?'done':''}"><input type="checkbox" ${c.done?'checked':''} onchange="toggleField('checks','${c.id}','done',this.checked)"><span>${esc(c.text)}</span><button class="icon-btn" onclick="removeItem('checks','${c.id}')">×</button></div>`).join('')||empty('暂无检查项。')}</section></main>
+  <aside class="paper-panel comment-panel"><div class="paper-panel-head"><b>批注与修改意见</b><button class="btn sm primary" onmousedown="event.preventDefault()" onclick="addPaperComment()">＋ 添加批注</button></div><div class="comment-filter">${['全部','待处理','已解决'].map(f=>`<button class="btn sm ${p.commentFilter===f?'active':''}" onclick="setCommentFilter('${f}')">${f}</button>`).join('')}</div><div class="comment-list">${comments.map(c=>`<div class="comment-card ${c.status==='已解决'?'resolved':''}" onclick="focusComment('${c.id}')"><div class="item-top"><b>${esc(c.author)}</b>${badge(c.status)}</div><div class="comment-body">${esc(c.content)}</div><div class="comment-quote">“${esc(c.quote)}”</div><div class="comment-meta">${esc(c.time)}</div><div class="comment-actions">${c.status!=='已解决'?`<button class="btn sm" onclick="event.stopPropagation();resolveComment('${c.id}')">标记已解决</button>`:''}<button class="btn sm danger" onclick="event.stopPropagation();deleteComment('${c.id}')">删除</button></div></div>`).join('')||empty('当前筛选下没有批注。先在正文中选中文字，再添加批注。')}</div></aside></div>`;
+}
+function paperChanged(){const ed=$('#paperEditor');$('#paperWordCount').textContent=(ed.innerText||'').replace(/\s/g,'').length;$('#paperSaveState').textContent='正文有未保存修改';$('#paperSaveState').style.color='var(--amber)'}
+function savePaperBody(quiet=false){const s=selectedPaperSection(),ed=$('#paperEditor');if(ed)s.bodyHtml=ed.innerHTML;if(!quiet){save();renderPaper();toast('正文已保存')}}
+function selectPaperSection(id){savePaperBody(true);current().selectedSectionId=id;save(true);renderPaper()}
+function sectionModal(){showModal('新增论文章节',field('title','章节名称'),d=>{const s={id:uid(),title:d.title,bodyHtml:''};current().paperSections.push(s);current().selectedSectionId=s.id})}
+function renameSection(id){const s=current().paperSections.find(x=>x.id===id),name=prompt('输入新的章节名称：',s.title);if(name&&name.trim()){s.title=name.trim();save();renderPaper()}}
+function renameSectionDirect(value){const s=selectedPaperSection();if(value.trim()){s.title=value.trim();save();renderPaper()}}
+function deleteSection(id){const p=current();if(p.paperSections.length===1)return toast('至少保留一个章节');if(confirm('确定删除该章节正文及其批注吗？')){p.paperSections=p.paperSections.filter(x=>x.id!==id);p.comments=p.comments.filter(x=>x.sectionId!==id);if(p.selectedSectionId===id)p.selectedSectionId=p.paperSections[0].id;save();renderPaper()}}
+function insertMaterial(id){const c=current().chapters.find(x=>x.id===id),ed=$('#paperEditor');ed.focus();const prefix=ed.innerText.trim()?'<p><br></p>':'';ed.insertAdjacentHTML('beforeend',prefix+`<p>${esc(c.content||'').replace(/\n/g,'<br>')}</p>`);paperChanged();savePaperBody()}
+function addPaperComment(){
+  const ed=$('#paperEditor'),sel=window.getSelection();if(!sel||!sel.rangeCount||sel.isCollapsed)return toast('请先在正文中选中一段文字');
+  const range=sel.getRangeAt(0);if(!ed.contains(range.commonAncestorContainer))return toast('请选择正文中的文字');
+  const quote=sel.toString().trim();if(!quote)return toast('请选择有效的正文文字');
+  const content=prompt('请输入批注或修改意见：');if(!content||!content.trim())return;
+  const markerId='comment-'+uid(),mark=document.createElement('mark');mark.dataset.commentId=markerId;
+  try{mark.appendChild(range.extractContents());range.insertNode(mark)}catch(e){return toast('这段选择跨越了复杂格式，请缩小选择范围后重试')}
+  const c={id:uid(),markerId,sectionId:selectedPaperSection().id,author:state.nickname||'队员',content:content.trim(),quote:quote.slice(0,120),status:'待处理',time:now()};
+  current().comments.push(c);savePaperBody(true);save();renderPaper();setTimeout(()=>focusComment(c.id),0)
+}
+function focusComment(id){const p=current(),c=p.comments.find(x=>x.id===id);if(!c)return;if(p.selectedSectionId!==c.sectionId){savePaperBody(true);p.selectedSectionId=c.sectionId;renderPaper();setTimeout(()=>focusComment(id),0);return}const mark=document.querySelector(`[data-comment-id="${c.markerId}"]`);if(mark){mark.scrollIntoView({behavior:'smooth',block:'center'});mark.animate([{outline:'3px solid #77a5f5'},{outline:'0 solid transparent'}],{duration:1300})}}
+function resolveComment(id){const c=current().comments.find(x=>x.id===id);if(c)c.status='已解决';savePaperBody(true);const s=current().paperSections.find(x=>x.id===c.sectionId),box=document.createElement('div');box.innerHTML=s.bodyHtml;const mark=box.querySelector(`[data-comment-id="${c.markerId}"]`);if(mark)mark.classList.add('resolved');s.bodyHtml=box.innerHTML;save();renderPaper()}
+function deleteComment(id){if(!confirm('确定删除这条批注吗？'))return;const p=current(),c=p.comments.find(x=>x.id===id),s=p.paperSections.find(x=>x.id===c.sectionId),box=document.createElement('div');box.innerHTML=s.bodyHtml;const mark=box.querySelector(`[data-comment-id="${c.markerId}"]`);if(mark)mark.replaceWith(...mark.childNodes);s.bodyHtml=box.innerHTML;p.comments=p.comments.filter(x=>x.id!==id);save();renderPaper()}
+function setCommentFilter(f){savePaperBody(true);current().commentFilter=f;save(true);renderPaper()}
+function setMaterialFinalFilter(on){savePaperBody(true);current().materialFinalOnly=on;save(true);renderPaper()}
+
+const chapterModalV1=chapterModal;
+chapterModal=function(id){
+  if(state.module==='paper')savePaperBody(true);
+  const x=current().chapters.find(v=>v.id===id)||{};
+  showModal(id?'编辑章节材料':'新增章节材料',field('name','章节名称',x.name)+field('question','关联小问',x.question)+field('model','关联模型',x.model)+field('experiment','关联实验',x.experiment)+field('done','完成状态',String(!!x.done),'select',['false','true'])+field('final','最终采用',String(!!x.final),'select',['false','true'])+field('content','正文材料',x.content,'textarea'),d=>{d.done=d.done==='true';d.final=d.final==='true';upsert('chapters',id,d)})
+}
+const removeItemV2Base=removeItem;
+removeItem=function(arr,id){if(state.module==='paper')savePaperBody(true);removeItemV2Base(arr,id)}
+const checkModalV2Base=checkModal;
+checkModal=function(){if(state.module==='paper')savePaperBody(true);checkModalV2Base()}
+function exportPaper(){
+  savePaperBody(true);const p=current();let md=`# ${p.name} · 论文正文\n\n`;
+  p.paperSections.forEach(s=>md+=`## ${s.title}\n\n${textFromHtml(s.bodyHtml)}\n\n`);
+  md+=`# 章节材料\n\n`;p.chapters.forEach(c=>md+=`## ${c.name}${c.final?'（最终采用）':''}\n\n${c.content||''}\n\n- 关联小问：${c.question||'无'}\n- 关联模型：${c.model||'无'}\n- 关联实验：${c.experiment||'无'}\n\n`);
+  md+=`# 写作检查清单\n\n`+p.checks.map(c=>`- [${c.done?'x':' '}] ${c.text}`).join('\n');
+  const blob=new Blob([md],{type:'text/markdown;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=p.name+'-论文材料.md';a.click();URL.revokeObjectURL(a.href);save(true);toast('论文材料已导出')
+}
+save(true);render();
+</script>
+<style>
+  .project-card.no-progress{padding-bottom:20px}.project-card.no-progress .meta-grid{margin-bottom:0}
+  .empty{padding:20px 12px;min-height:86px}.empty .empty-icon{font-size:22px}
+  .save-state{color:#536176;font-size:13px;font-weight:600}
+  .project-card .meta-grid{color:#8792a3;font-size:12px}
+  .top-actions,.backup-tools{display:flex;gap:8px;align-items:center}.file-input{display:none}
+  .question-filter{background:#f8faff;border:1px solid #e2eaf5;border-radius:10px;padding:10px 13px}
+  .question-filter select{width:auto;min-width:145px}
+  .version-chain{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:13px;background:#f8faff;border:1px solid #e3eaf4;border-radius:10px;margin-bottom:11px}
+  .version-node{background:#fff;border:1px solid #cdd9e9;border-radius:8px;padding:6px 10px;font-size:12px;color:#41516a}.version-arrow{color:#8aa1bd;font-weight:800}
+  .link-chip{border:0;background:var(--blue2);color:#286bd8;border-radius:99px;padding:3px 9px;font-size:12px;cursor:pointer}.link-chip:hover{background:#dbe9ff}
+  .experiment-labels{display:flex;gap:7px;flex-wrap:wrap;margin:9px 0}.metric-summary{display:flex;gap:18px;align-items:center;flex-wrap:wrap;background:#f8faff;border:1px solid #e1eaf6;border-radius:9px;padding:11px 13px;margin-bottom:14px}.metric-summary b{color:var(--blue)}
+  .comparison-chart{height:235px;border:1px solid var(--line);border-radius:10px;padding:14px}.comparison-bars{height:170px;display:flex;align-items:flex-end;gap:18px;border-bottom:1px solid #cad5e3;padding:10px 15px 0}.comparison-bar-item{height:100%;flex:1;max-width:80px;display:flex;flex-direction:column;justify-content:flex-end;align-items:center}.comparison-bar{width:42px;min-height:3px;background:linear-gradient(#77a9ff,#377cf6);border-radius:5px 5px 0 0}.comparison-bar-label{font-size:11px;color:var(--muted);max-width:80px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.comparison-bar-value{font-size:11px}
+  .save-status{font-size:12px;font-weight:800;padding:4px 9px;border-radius:99px;margin-right:7px}.save-status.saved{background:#e8f8f0;color:#16815a}.save-status.dirty{background:#fff3d8;color:#a36708}.save-status.saving{background:#eaf2ff;color:#286bd8}
+  .comment-position{font-size:11px;color:#7a6840;margin-top:7px}.sendbox select{width:125px;flex:none}
+  @media(max-width:900px){.backup-tools{display:none}.top-actions .btn:not(.primary){display:none}}
+  @media(max-width:700px){.top-actions{gap:5px}.top-actions .btn{padding:8px 10px}.question-filter{overflow-x:auto;white-space:nowrap}.sendbox{flex-wrap:wrap}.sendbox select{width:100%}}
+</style>
+<script>
+/* 2026-06 训练工作流升级：小问索引、数据血缘、实验约束比较与 JSON 备份 */
+function cleanQuestionName(name){
+  const s=String(name||'').trim(),m=s.match(/^(问题\s*\d+)/);
+  return m?m[1].replace(/问题\s*(\d+)/,'问题 $1'):s;
+}
+function questionOptions(p=current(),includeAll=false){
+  const fixed=['整题','问题 1','问题 2','问题 3','问题 4'];
+  const custom=(p?.questions||[]).map(q=>cleanQuestionName(q.name)).filter(Boolean);
+  return [...(includeAll?['全部']:[]),...new Set([...fixed,...custom])];
+}
+function optionTags(options,value){return options.map(x=>`<option value="${esc(x.value??x)}" ${(x.value??x)===value?'selected':''}>${esc(x.label??x)}</option>`).join('')}
+function selectField(name,label,value,options,wide=false){return `<div class="field ${wide?'span2':''}"><label>${label}</label><select name="${name}">${optionTags(options,value)}</select></div>`}
+function qField(name,value='整题'){return selectField(name,'关联小问',value||'整题',questionOptions())}
+function qFilterHtml(field,value){return `<div class="filterbar question-filter"><b>按小问筛选</b><select onchange="current().${field}=this.value;save(true);renderModule()">${optionTags(questionOptions(current(),true),value||'全部')}</select></div>`}
+function byQuestion(list,filter){return !filter||filter==='全部'?list:list.filter(x=>(x.question||'整题')===filter)}
+function ensureProjectV3(p){
+  ensureProjectV2(p);
+  ['resources','data','models','experiments','tasks','messages','decisions','ideas','chapters'].forEach(k=>(p[k]||[]).forEach(x=>x.question=x.question&&x.question!=='全部'?cleanQuestionName(x.question):'整题'));
+  p.data.forEach(d=>{if(d.parentId===undefined)d.parentId=''});
+  p.experiments.forEach(e=>{
+    e.goal=e.goal||e.type||'其他';e.mainMetric=e.mainMetric||Object.keys(parseAllMetrics(e.metrics))[0]||'主要指标';e.metricDirection=e.metricDirection||'仅作描述';
+    e.modelId=e.modelId||p.models.find(m=>m.name===e.model)?.id||'';e.dataId=e.dataId||p.data.find(d=>d.file===e.data||d.name===e.data)?.id||'';e.imageQuestion=e.imageQuestion||e.question;
+  });
+  p.chapters.forEach(c=>{c.modelId=c.modelId||p.models.find(m=>m.name===c.model)?.id||'';c.experimentId=c.experimentId||p.experiments.find(e=>c.experiment===e.no||c.experiment===`${e.no} · ${e.name}`)?.id||''});
+  ['resourceQuestionFilter','dataQuestionFilter','modelQuestionFilter','experimentQuestionFilter','taskQuestionFilter','paperQuestionFilter'].forEach(k=>p[k]=p[k]||'全部');
+  return p;
+}
+state.projects.forEach(ensureProjectV3);
+
+function renderHome(){
+  $('#app').innerHTML=`<div class="topbar"><div class="brand"><span class="logo">∑</span><span>数学建模训练记录助手</span></div><div class="top-actions"><button class="btn" onclick="exportAllProjects()">导出全部项目</button><button class="btn" onclick="$('#importAllFile').click()">导入项目备份</button><input id="importAllFile" class="file-input" type="file" accept=".json,application/json" onchange="importBackupFile(this,'all')"><button class="btn primary" onclick="projectModal()">＋ 新建训练项目</button></div></div>
+  <main class="home"><div class="hero"><div><h1>数学建模训练项目</h1><p>集中整理题目、模型、实验与论文材料，让每一次训练都有迹可循。</p></div><div style="color:var(--muted)">共 ${state.projects.length} 个项目</div></div>
+  <div class="project-grid">${state.projects.length?state.projects.map(p=>`<article class="project-card no-progress" onclick="openProject('${p.id}')"><button class="icon-btn delete-project" title="删除" onclick="event.stopPropagation();removeProject('${p.id}')">×</button>${badge(p.status)}<h3>${esc(p.name)}</h3><div class="remark">${esc(p.note||'暂无备注')}</div><div class="meta-grid"><span>◷ ${esc(p.modified)}</span><span>⌁ 实验 ${p.experiments.length} 次</span><span>✓ 完成 ${p.tasks.filter(t=>t.status==='已完成').length} 项任务</span><span>⏳ ${p.deadline||'未设截止日期'}</span></div></article>`).join(''):`<section class="home-empty"><div class="home-empty-icon">▤</div><h2>还没有训练项目</h2><p>点击右上角“新建训练项目”，开始整理一道数学建模题。</p><button class="btn primary" onclick="projectModal()">＋ 新建第一个训练项目</button></section>`}</div></main>`;
+}
+const renderWorkspaceV3Base=renderWorkspace;
+renderWorkspace=function(){
+  renderWorkspaceV3Base();
+  const anchor=$('#saveState');if(anchor)anchor.insertAdjacentHTML('beforebegin',`<div class="backup-tools"><button class="btn sm" onclick="exportCurrentProject()">导出当前项目备份</button><button class="btn sm" onclick="$('#importCurrentFile').click()">导入到当前项目</button><input id="importCurrentFile" class="file-input" type="file" accept=".json,application/json" onchange="importBackupFile(this,'current')"></div>`);
+}
+
+const renderResourcesV3Base=renderResources;
+renderResources=function(){
+  const p=current(),all=p.resources,shown=byQuestion(all,p.resourceQuestionFilter);p.resources=shown;renderResourcesV3Base();p.resources=all;
+  $('#moduleContent .page-title').insertAdjacentHTML('afterend',qFilterHtml('resourceQuestionFilter',p.resourceQuestionFilter));
+}
+function resourceModal(kind){
+  showModal(kind==='link'?'添加网页链接':'上传文件（模拟）',field('name','资料名称')+field('type','资料类别',kind==='link'?'网页资料':'官方附件','select',['赛题 PDF','官方附件','参考论文','网页资料','队友笔记','其他资料'])+qField('question')+(kind==='link'?field('link','网页地址','','url'):field('file','选择文件','','file'))+field('note','备注','','textarea'),d=>upsert('resources',null,{...d,time:now()}),'添加资料')
+}
+
+function dataLabel(id){const d=current().data.find(x=>x.id===id);return d?(d.file||d.name):'无来源数据'}
+function dataChains(list){
+  const map=new Map(list.map(x=>[x.id,x])),seen=new Set(),chains=[];
+  function path(d,guard=new Set()){if(!d||guard.has(d.id))return[];guard.add(d.id);return [...path(map.get(d.parentId),guard),d]}
+  list.forEach(d=>{const a=path(d),key=a.map(x=>x.id).join('>');if(!seen.has(key)){seen.add(key);chains.push(a)}});
+  return chains.sort((a,b)=>b.length-a.length);
+}
+function renderData(){
+  const p=current(),color={'原始数据':'raw','清洗后数据':'clean','特征工程数据':'feature','中间结果':'middle','最终结果':'final'},shown=byQuestion(p.data,p.dataQuestionFilter),chains=dataChains(p.data);
+  $('#moduleContent').innerHTML=pageHead('数据管理','记录每份数据从哪里来、经过什么处理，并保持版本链清晰。','<button class="btn primary" onclick="dataModal()">＋ 新增数据记录</button>')+
+  qFilterHtml('dataQuestionFilter',p.dataQuestionFilter)+`<section class="card"><div class="card-head"><h3>数据版本链路</h3><span style="color:var(--muted)">来源数据 → 派生数据</span></div>${chains.length?chains.slice(0,8).map(chain=>`<div class="version-chain">${chain.map((d,i)=>`${i?'<span class="version-arrow">→</span>':''}<button class="version-node" onclick="focusData('${d.id}')">${esc(d.file||d.name)}</button>`).join('')}</div>`).join(''):empty('新增数据后，这里会自动展示版本关系。')}</section>
+  <div class="section-stack">${shown.map(d=>`<div class="data-row" id="data-${d.id}"><div class="data-color ${color[d.type]||'middle'}"></div><div class="data-body"><div class="item-top"><div><span class="item-title">${esc(d.name)}</span> ${badge(d.type)}</div></div><div class="item-meta"><span>文件：${esc(d.file||'—')}</span><span>来源版本：${esc(dataLabel(d.parentId))}</span><span>关联：${esc(d.question||'整题')}</span><span>${esc(d.time||'—')}</span></div><div>${esc(d.description||'暂无处理说明')}</div></div><div class="data-actions"><button class="btn sm" onclick="dataModal('${d.id}')">编辑</button><button class="icon-btn" onclick="removeItem('data','${d.id}')">×</button></div></div>`).join('')||empty('当前小问下还没有数据记录。')}</div>`;
+}
+function dataModal(id){
+  const p=current(),x=p.data.find(v=>v.id===id)||{},parents=[{value:'',label:'无来源数据'},...p.data.filter(v=>v.id!==id).map(v=>({value:v.id,label:v.file||v.name}))];
+  showModal(id?'编辑数据记录':'新增数据记录',field('name','数据名称',x.name)+field('type','数据类别',x.type||'原始数据','select',['原始数据','清洗后数据','特征工程数据','中间结果','最终结果'])+field('file','文件或文件名称',x.file)+selectField('parentId','来源数据 / 父版本',x.parentId||'',parents)+field('source','数据来源说明',x.source)+qField('question',x.question)+field('description','数据处理说明',x.description,'textarea'),d=>upsert('data',id,d,{time:now()}))
+}
+function focusData(id){const p=current();p.dataQuestionFilter='全部';state.module='data';save(true);renderWorkspace();setTimeout(()=>pulseElement('data-'+id),0)}
+
+const renderModelsV3Base=renderModels;
+renderModels=function(){
+  const p=current(),all=p.models,shown=byQuestion(all,p.modelQuestionFilter);p.models=shown;renderModelsV3Base();p.models=all;
+  $('#moduleContent .page-title').insertAdjacentHTML('afterend',qFilterHtml('modelQuestionFilter',p.modelQuestionFilter));
+  [...document.querySelectorAll('.model-grid>.item-card')].forEach((card,i)=>card.id='model-'+(p.modelFinalOnly?shown.filter(x=>x.final):shown)[i]?.id);
+  if(p.focusModelId){setTimeout(()=>pulseElement('model-'+p.focusModelId),0);p.focusModelId=''}
+}
+function modelModal(id){
+  const x=current().models.find(v=>v.id===id)||{};
+  showModal(id?'编辑模型':'新增模型',field('name','模型名称',x.name)+qField('question',x.question)+field('type','模型类别',x.type||'预测','select',['预测','优化','分类','聚类','评价','仿真','其他'])+field('status','当前状态',x.status||'待测试','select',['待测试','备选','已采用','已废弃'])+selectField('final','最终采用',String(!!x.final),[{value:'false',label:'否'},{value:'true',label:'是'}])+field('problem','解决什么问题',x.problem,'textarea')+field('principle','基本原理',x.principle,'textarea')+field('input','输入变量',x.input)+field('output','输出变量',x.output)+field('pros','优点',x.pros,'textarea')+field('cons','局限性',x.cons,'textarea')+field('code','代码链接或文件名',x.code)+field('note','备注',x.note,'textarea'),d=>{d.final=d.final==='true';upsert('models',id,d)})
+}
+function jumpToModel(id){const p=current();p.modelQuestionFilter='全部';p.modelFinalOnly=false;p.focusModelId=id;state.module='models';save(true);renderWorkspace()}
+function pulseElement(id){const el=document.getElementById(id);if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.animate([{outline:'3px solid #6fa1f7'},{outline:'0 solid transparent'}],{duration:1400})}}
+
+function parseAllMetrics(s){
+  const out={};String(s||'').split(/\n|,|，/).forEach(line=>{const m=line.trim().match(/^(.+?)[：:]\s*(-?[\d.]+)(%?)/);if(m)out[m[1].trim()]=+(m[2])});
+  return out;
+}
+function experimentModel(e){return current().models.find(x=>x.id===e.modelId)}
+function experimentData(e){return current().data.find(x=>x.id===e.dataId)}
+function renderExperiments(){
+  const p=current(),selected=(p.selectedExperiments||[]).filter(id=>p.experiments.some(e=>e.id===id));p.selectedExperiments=selected;
+  let ex=byQuestion(p.experiments,p.experimentQuestionFilter);if(p.experimentFinalOnly)ex=ex.filter(e=>e.final||e.finalImage);ex=[...ex].sort((a,b)=>String(b.time).localeCompare(String(a.time)));
+  const picked=p.experiments.filter(e=>selected.includes(e.id));
+  $('#moduleContent').innerHTML=pageHead('实验记录与结果','让模型、数据版本、实验目标和评价指标形成可追溯关系。','<button class="btn primary" onclick="experimentModal()">＋ 新增实验记录</button>')+
+  qFilterHtml('experimentQuestionFilter',p.experimentQuestionFilter)+`<div class="filterbar"><label class="filter-switch"><input type="checkbox" ${p.experimentFinalOnly?'checked':''} onchange="current().experimentFinalOnly=this.checked;save(true);renderExperiments()">仅看最终采用实验 / 图表</label><span style="color:var(--muted)">显示 ${ex.length} / ${p.experiments.length} 条</span></div>
+  <section class="card"><div class="card-head"><h3>实验结果对比</h3><span style="color:var(--muted)">仅允许比较相同小问、相同实验目标</span></div>${picked.length?renderExperimentComparison(picked):empty('勾选实验后，将在这里生成指标对比表和柱状图。')}</section>
+  <section><div class="card-head"><h3>实验记录 · ${ex.length}</h3><span style="color:var(--muted)">按时间从新到旧</span></div><div class="section-stack">${ex.map(e=>{const m=experimentModel(e),d=experimentData(e);return `<div class="item-card" id="experiment-${e.id}"><div class="item-top"><div class="checkline"><input type="checkbox" ${selected.includes(e.id)?'checked':''} onchange="toggleExperiment('${e.id}',this.checked)"><div>${e.final?'<span class="final-tag">★ 最终采用实验</span> ':''}${e.image&&e.finalImage?'<span class="final-tag">▧ 最终采用图表</span> ':''}<div class="item-title">${esc(e.no)} · ${esc(e.name)}</div><div class="experiment-labels">${badge(e.question||'整题')}${badge(e.goal||'其他')}${badge(e.status)}${m?`<button class="link-chip" onclick="jumpToModel('${m.id}')">模型：${esc(m.name)}</button>`:`<span class="badge">模型：${esc(e.model||'—')}</span>`}${d?`<button class="link-chip" onclick="focusData('${d.id}')">数据：${esc(d.file||d.name)}</button>`:`<span class="badge">数据：${esc(e.data||'—')}</span>`}</div></div></div><div class="item-actions">${e.image?`<button class="btn sm final-toggle ${e.finalImage?'active':''}" onclick="toggleFinalImage('${e.id}')">${e.finalImage?'取消图表采用':'采用图表'}</button>`:''}<button class="btn sm final-toggle ${e.final?'active':''}" onclick="toggleFinal('experiments','${e.id}')">${e.final?'取消采用':'采用实验'}</button><button class="btn sm" onclick="experimentModal('${e.id}')">编辑</button><button class="icon-btn" onclick="removeItem('experiments','${e.id}')">×</button></div></div><div class="detail-grid">${detail('实验目标与主指标',`${e.goal||'其他'} · ${e.mainMetric||'—'} · ${e.metricDirection||'仅作描述'}`)}${detail('参数设置',e.params)}${detail('评价指标',e.metrics)}${detail('输出结果',e.output||'—')}${detail('图表或图片',e.image?`${e.image}（${e.imageQuestion||e.question||'整题'}）`:'—')}${detail('实验结论',e.conclusion)}</div></div>`}).join('')||empty('当前筛选下还没有实验记录。')}</div></section>`;
+}
+function renderExperimentComparison(exs){
+  const first=exs[0],metrics=[...new Set(exs.flatMap(e=>Object.keys(parseAllMetrics(e.metrics))))],primary=first.mainMetric||metrics[0]||'主要指标',values=exs.map(e=>parseAllMetrics(e.metrics)[primary]).filter(Number.isFinite),max=Math.max(...values.map(Math.abs),1);
+  return `<div class="metric-summary"><span>比较小问：<b>${esc(first.question||'整题')}</b></span><span>实验目标：<b>${esc(first.goal||'其他')}</b></span><span>主要指标：<b>${esc(primary)}</b></span><span>指标方向：<b>${esc(first.metricDirection||'仅作描述')}</b></span></div>
+  <div class="table-wrap"><table class="compare-table"><thead><tr><th>实验</th><th>模型</th><th>数据版本</th>${metrics.map(m=>`<th>${esc(m)}</th>`).join('')}<th>最终采用</th></tr></thead><tbody>${exs.map(e=>{const vals=parseAllMetrics(e.metrics);return `<tr><td>${esc(e.no)} · ${esc(e.name)}</td><td>${esc(experimentModel(e)?.name||e.model||'—')}</td><td>${esc(experimentData(e)?.file||e.data||'—')}</td>${metrics.map(m=>`<td>${vals[m]??'—'}</td>`).join('')}<td>${e.final?'是':'否'}</td></tr>`}).join('')}</tbody></table></div>
+  <div class="comparison-chart" style="margin-top:15px"><b>${esc(primary)} 柱状对比</b><div class="comparison-bars">${exs.map(e=>{const v=parseAllMetrics(e.metrics)[primary];return `<div class="comparison-bar-item"><span class="comparison-bar-value">${Number.isFinite(v)?v:'—'}</span><div class="comparison-bar" style="height:${Number.isFinite(v)?Math.max(3,Math.abs(v)/max*90):0}%"></div><span class="comparison-bar-label">${esc(e.no)}</span></div>`}).join('')}</div></div>`;
+}
+function toggleExperiment(id,on){
+  const p=current(),e=p.experiments.find(x=>x.id===id),selected=p.selectedExperiments||[];
+  if(!on){p.selectedExperiments=selected.filter(x=>x!==id);save(true);return renderExperiments()}
+  const first=p.experiments.find(x=>selected.includes(x.id));
+  if(first&&((first.question||'整题')!==(e.question||'整题')||(first.goal||'其他')!==(e.goal||'其他'))){toast('当前实验与已选实验不属于同一小问或同一实验目标，无法直接比较。');return renderExperiments()}
+  p.selectedExperiments=[...new Set([...selected,id])];save(true);renderExperiments()
+}
+function experimentModal(id){
+  const p=current(),x=p.experiments.find(v=>v.id===id)||{},next='EXP-'+String(p.experiments.length+1).padStart(3,'0'),models=[{value:'',label:'请选择模型'},...p.models.map(m=>({value:m.id,label:m.name}))],datasets=[{value:'',label:'请选择数据版本'},...p.data.map(d=>({value:d.id,label:d.file||d.name}))];
+  showModal(id?'编辑实验记录':'新增实验记录',field('no','实验编号',x.no||next)+field('name','实验名称',x.name)+qField('question',x.question)+selectField('modelId','使用模型',x.modelId||'',models)+selectField('dataId','使用数据版本',x.dataId||'',datasets)+field('goal','实验目标',x.goal||'预测','select',['预测','分类','聚类','优化','评价','敏感性分析','仿真','其他'])+field('mainMetric','主要评价指标',x.mainMetric)+field('metricDirection','指标方向',x.metricDirection||'越小越好','select',['越小越好','越大越好','仅作描述'])+field('status','实验状态',x.status||'成功','select',['成功','失败','备选','已采用'])+selectField('final','最终采用实验',String(!!x.final),[{value:'false',label:'否'},{value:'true',label:'是'}])+field('params','参数设置',x.params,'textarea')+field('metrics','评价指标（每行一项，如 RMSE：18.42）',x.metrics,'textarea')+field('output','输出结果文件',x.output)+field('image','图表或图片名称',x.image)+qField('imageQuestion',x.imageQuestion||x.question)+selectField('finalImage','最终采用图表',String(!!x.finalImage),[{value:'false',label:'否'},{value:'true',label:'是'}])+field('conclusion','实验结论',x.conclusion,'textarea'),d=>{const m=p.models.find(v=>v.id===d.modelId),data=p.data.find(v=>v.id===d.dataId);d.model=m?.name||'';d.data=data?.file||data?.name||'';d.final=d.final==='true';d.finalImage=d.finalImage==='true';upsert('experiments',id,d,{time:now()})})
+}
+
+const renderTasksV3Base=renderTasks;
+renderTasks=function(){
+  const p=current(),keys=['tasks','messages','decisions','ideas'],all={};keys.forEach(k=>{all[k]=p[k];p[k]=byQuestion(p[k],p.taskQuestionFilter)});renderTasksV3Base();const shown={};keys.forEach(k=>{shown[k]=p[k];p[k]=all[k]});
+  $('#moduleContent .page-title').insertAdjacentHTML('afterend',qFilterHtml('taskQuestionFilter',p.taskQuestionFilter));
+  const box=$('#moduleContent .sendbox');if(box)box.insertAdjacentHTML('afterbegin',`<select id="messageQuestion">${optionTags(questionOptions(p),'整题')}</select>`);
+  [...document.querySelectorAll('.discussion .message')].forEach((node,i)=>node.querySelector('.bubble-head').insertAdjacentHTML('afterend',`<div class="item-meta">关联：${esc(shown.messages[i].question||'整题')}</div>`));
+  [...document.querySelectorAll('.decision')].forEach((node,i)=>node.querySelector('.item-meta').insertAdjacentHTML('beforeend',` · 关联：${esc(shown.decisions[i].question||'整题')}`));
+}
+function taskModal(){showModal('新增任务',field('name','任务名称')+field('owner','负责人',state.nickname)+field('deadline','截止日期','','date')+qField('question')+field('status','当前状态','待办','select',['待办','进行中','已完成'])+field('description','任务说明','','textarea'),d=>upsert('tasks',null,d))}
+function sendMessage(){const i=$('#messageInput'),v=i.value.trim();if(!v)return toast('请输入消息内容');current().messages.push({id:uid(),sender:state.nickname||'队员',content:v,question:$('#messageQuestion')?.value||'整题',time:now()});save();renderTasks()}
+function decisionModal(){showModal('记录重要决策',field('title','决策标题')+qField('question')+field('content','决定内容','','textarea')+field('reason','做出该决定的原因','','textarea'),d=>upsert('decisions',null,{...d,time:now()}))}
+function ideaModal(){showModal('添加待验证问题 / 临时想法',field('content','问题或想法','','textarea')+qField('question')+field('author','提出人昵称',state.nickname||'队员')+field('status','当前状态','待验证','select',['待验证','已验证','已放弃'])+field('note','备注','','textarea'),d=>upsert('ideas',null,d))}
+
+const renderPaperV3Base=renderPaper;
+renderPaper=function(){
+  const p=current(),all=p.chapters,shown=byQuestion(all,p.paperQuestionFilter);p.chapters=shown;renderPaperV3Base();p.chapters=all;
+  $('#moduleContent .page-title').insertAdjacentHTML('afterend',qFilterHtml('paperQuestionFilter',p.paperQuestionFilter));
+  const status=$('#paperSaveState');if(status){status.className='save-status saved';status.textContent='已保存'}
+  [...document.querySelectorAll('.comment-card .comment-quote')].forEach(el=>{el.insertAdjacentHTML('beforebegin','<div class="comment-position">批注位置：</div>')});
+}
+chapterModal=function(id){
+  if(state.module==='paper')savePaperBody(true);const p=current(),x=p.chapters.find(v=>v.id===id)||{},models=[{value:'',label:'不关联模型'},...p.models.map(m=>({value:m.id,label:m.name}))],experiments=[{value:'',label:'不关联实验'},...p.experiments.map(e=>({value:e.id,label:`${e.no} · ${e.name}`}))];
+  showModal(id?'编辑章节材料':'新增章节材料',field('name','章节名称',x.name)+qField('question',x.question)+selectField('modelId','关联模型',x.modelId||'',models)+selectField('experimentId','关联实验',x.experimentId||'',experiments)+field('done','完成状态',String(!!x.done),'select',['false','true'])+selectField('final','最终采用',String(!!x.final),[{value:'false',label:'否'},{value:'true',label:'是'}])+field('content','正文材料',x.content,'textarea'),d=>{d.done=d.done==='true';d.final=d.final==='true';d.model=p.models.find(v=>v.id===d.modelId)?.name||'';const e=p.experiments.find(v=>v.id===d.experimentId);d.experiment=e?`${e.no} · ${e.name}`:'';upsert('chapters',id,d)})
+}
+function paperChanged(){const ed=$('#paperEditor');$('#paperWordCount').textContent=(ed.innerText||'').replace(/\s/g,'').length;const s=$('#paperSaveState');if(s){s.textContent='未保存';s.className='save-status dirty'}}
+function savePaperBody(quiet=false){
+  const sec=selectedPaperSection(),ed=$('#paperEditor');if(ed)sec.bodyHtml=ed.innerHTML;
+  if(quiet)return;
+  const s=$('#paperSaveState');if(s){s.textContent='正在保存';s.className='save-status saving'}
+  setTimeout(()=>{save(true);const n=$('#paperSaveState');if(n){n.textContent='已保存';n.className='save-status saved'}toast('正文已保存')},180)
+}
+
+function downloadJson(data,name){const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();URL.revokeObjectURL(a.href)}
+function exportAllProjects(){downloadJson({kind:'mcm-all-projects',version:3,exportedAt:now(),nickname:state.nickname,projects:state.projects},'数学建模训练记录-全部项目备份.json');toast('全部项目备份已导出')}
+function exportCurrentProject(){downloadJson({kind:'mcm-project',version:3,exportedAt:now(),project:current()},`${current().name}-项目备份.json`);toast('当前项目备份已导出')}
+function importBackupFile(input,mode){
+  const file=input.files?.[0];if(!file)return;const reader=new FileReader();
+  reader.onload=()=>{try{const data=JSON.parse(reader.result);if(mode==='current'){const incoming=data.kind==='mcm-project'?data.project:data.project;if(!incoming||!incoming.name)throw Error('文件中没有有效的单项目数据');if(!confirm(`确定用“${incoming.name}”的备份内容恢复当前项目吗？当前项目内容将被替换。`))return;const oldId=current().id,idx=state.projects.findIndex(p=>p.id===oldId);incoming.id=oldId;state.projects[idx]=ensureProjectV3(incoming);state.current=oldId;save();renderWorkspace();toast('当前项目已恢复')}else if(data.kind==='mcm-all-projects'&&Array.isArray(data.projects)){if(!confirm(`该备份包含 ${data.projects.length} 个项目。确定导入全部项目并替换当前项目列表吗？`))return;state.projects=data.projects.map(ensureProjectV3);state.nickname=data.nickname||state.nickname;state.current=null;save();render();toast('全部项目备份已恢复')}else if(data.kind==='mcm-project'&&data.project){if(!confirm(`确定将“${data.project.name}”作为新项目导入吗？`))return;const p=ensureProjectV3(data.project);p.id=uid();p.name=p.name+'（导入）';state.projects.unshift(p);save();render();toast('项目备份已导入')}else throw Error('无法识别此备份文件')}catch(e){alert('导入失败：'+e.message)}finally{input.value=''}};
+  reader.onerror=()=>{alert('导入失败：无法读取文件');input.value=''};reader.readAsText(file,'utf-8')
+}
+save(true);render();
+</script>
+<script src="./config.js"></script>
+<style>
+  .cloud-status{display:inline-flex;align-items:center;gap:6px;border-radius:99px;padding:4px 9px;background:#eef2f7;color:#667286;font-size:12px;font-weight:700;white-space:nowrap}
+  .cloud-status::before{content:"";width:7px;height:7px;border-radius:50%;background:#9aa6b6}
+  .cloud-status.online{background:#e8f8f0;color:#187d59}.cloud-status.online::before{background:#22a06b}
+  .cloud-status.syncing{background:#eaf2ff;color:#286bd8}.cloud-status.syncing::before{background:#377cf6;animation:cloudPulse 1s infinite}
+  .cloud-status.error{background:#ffecef;color:#b83b47}.cloud-status.error::before{background:#df4c56}
+  .share-code{font-family:Consolas,monospace;letter-spacing:1px;font-weight:800;color:#286bd8}
+  @keyframes cloudPulse{50%{opacity:.3}}
+  @media(max-width:1050px){.cloud-text-btn{display:none}.cloud-status{padding:4px 7px}}
+</style>
+<script>
+/* Supabase 联机协作层：匿名身份 + 分享码 + 项目级实时同步 */
+const cloudRuntime={client:null,ready:false,initializing:null,applying:false,timer:null,channels:new Map(),status:'local',message:'本地模式',pendingRemote:new Map()};
+function getCloudConfig(){
+  let local={};try{local=JSON.parse(localStorage.getItem('mcm-cloud-config')||'{}')}catch(e){}
+  const file=window.MCM_CLOUD_CONFIG||{};
+  return {url:local.url||file.url||'',anonKey:local.anonKey||file.anonKey||''}
+}
+function validCloudConfig(c){return /^https:\/\/.+\.supabase\.co\/?$/.test(c.url||'')&&(c.anonKey||'').length>30}
+function setCloudStatus(status,message){cloudRuntime.status=status;cloudRuntime.message=message||({local:'本地模式',online:'联机正常',syncing:'正在同步',error:'联机异常'}[status]);document.querySelectorAll('[data-cloud-status]').forEach(el=>{el.className='cloud-status '+status;el.textContent=cloudRuntime.message})}
+async function initCloud(force=false){
+  if(cloudRuntime.ready&&!force)return cloudRuntime.client;
+  if(cloudRuntime.initializing&&!force)return cloudRuntime.initializing;
+  cloudRuntime.initializing=(async()=>{
+    const config=getCloudConfig();if(!validCloudConfig(config)){setCloudStatus('local','本地模式');return null}
+    try{
+      setCloudStatus('syncing','正在连接');
+      const {createClient}=await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+      cloudRuntime.client=createClient(config.url.replace(/\/$/,''),config.anonKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
+      let {data:{session},error}=await cloudRuntime.client.auth.getSession();if(error)throw error;
+      if(!session){const result=await cloudRuntime.client.auth.signInAnonymously();if(result.error)throw result.error;session=result.data.session}
+      cloudRuntime.userId=session?.user?.id||'';cloudRuntime.ready=true;setCloudStatus('online','联机正常');state.projects.filter(p=>p.cloudId).forEach(p=>subscribeCloudProject(p.cloudId));return cloudRuntime.client
+    }catch(e){console.error('Cloud init failed',e);setCloudStatus('error','联机配置失败');cloudRuntime.ready=false;return null}
+  })();
+  const result=await cloudRuntime.initializing;cloudRuntime.initializing=null;return result
+}
+function cloudStatusHtml(){return `<span class="cloud-status ${cloudRuntime.status}" data-cloud-status>${esc(cloudRuntime.message)}</span>`}
+function cloudProjectControls(p){
+  return p.cloudId?`${cloudStatusHtml()}<span class="share-code">分享码 ${esc(p.shareCode||'—')}</span><button class="btn sm" onclick="copyShareCode()">复制分享码</button><button class="btn sm" onclick="syncCurrentProjectNow()">立即同步</button>`:`${cloudStatusHtml()}<button class="btn sm primary" onclick="enableCurrentProjectCloud()">开启本项目联机</button>`
+}
+const renderHomeCloudBase=renderHome;
+renderHome=function(){
+  renderHomeCloudBase();const actions=$('.top-actions'),primary=actions?.querySelector('.primary');
+  if(primary)primary.insertAdjacentHTML('beforebegin',`${cloudStatusHtml()}<button class="btn cloud-text-btn" onclick="joinCloudProject()">加入联机项目</button><button class="btn cloud-text-btn" onclick="cloudSettingsModal()">联机设置</button>`)
+}
+const renderWorkspaceCloudBase=renderWorkspace;
+renderWorkspace=function(){
+  renderWorkspaceCloudBase();const p=current(),tools=$('.backup-tools');if(tools&&p)tools.insertAdjacentHTML('afterend',`<div class="backup-tools">${cloudProjectControls(p)}</div>`)
+}
+function cloudSettingsModal(){
+  const c=getCloudConfig();showModal('Supabase 联机设置',field('url','Project URL',c.url,'url')+field('anonKey','Anon / Publishable Key',c.anonKey,'textarea')+`<div class="span2 soft">只填写 Supabase 的匿名密钥（anon key / publishable key），不要填写 service_role 密钥。保存后刷新页面生效。</div>`,d=>{localStorage.setItem('mcm-cloud-config',JSON.stringify({url:d.url.trim(),anonKey:d.anonKey.trim()}));toast('联机配置已保存，正在重新连接');setTimeout(()=>location.reload(),500)},'保存并连接')
+}
+async function requireCloud(){
+  const client=await initCloud();if(!client){cloudSettingsModal();toast('请先完成 Supabase 联机设置');return null}return client
+}
+function stableCloudProject(row){
+  const p=ensureProjectV3(row.data||{});p.cloudId=row.id;p.shareCode=row.share_code;p.cloudUpdatedAt=row.updated_at;p.id='cloud:'+row.id;p.modified=p.modified||now();return p
+}
+async function enableCurrentProjectCloud(){
+  const client=await requireCloud();if(!client)return;const p=current();if(!p||p.cloudId)return;
+  if(!confirm('开启联机后，会把当前项目上传到 Supabase，并生成一个可分享给队友的加入码。确定继续吗？'))return;
+  setCloudStatus('syncing','正在创建联机项目');
+  const {data,error}=await client.rpc('create_training_project',{p_name:p.name,p_data:p}).single();
+  if(error){setCloudStatus('error','创建失败');return alert('开启联机失败：'+error.message)}
+  const oldId=p.id;p.cloudId=data.id;p.shareCode=data.share_code;p.cloudUpdatedAt=data.updated_at;p.id='cloud:'+data.id;state.current=p.id;
+  subscribeCloudProject(p.cloudId);localStorage.setItem('mcm-training-v1',JSON.stringify(state));await syncProjectToCloud(p,true);renderWorkspace();toast(`联机已开启，分享码：${p.shareCode}`)
+}
+async function joinCloudProject(){
+  const client=await requireCloud();if(!client)return;const code=prompt('请输入队友提供的项目分享码：');if(!code||!code.trim())return;
+  setCloudStatus('syncing','正在加入项目');
+  const {data,error}=await client.rpc('join_training_project',{p_share_code:code.trim().toUpperCase()}).single();
+  if(error){setCloudStatus('error','加入失败');return alert('加入联机项目失败：'+error.message)}
+  const p=stableCloudProject(data),existing=state.projects.findIndex(x=>x.cloudId===p.cloudId);
+  if(existing>=0)state.projects[existing]=p;else state.projects.unshift(p);
+  state.current=p.id;subscribeCloudProject(p.cloudId);localStorage.setItem('mcm-training-v1',JSON.stringify(state));setCloudStatus('online','联机正常');renderWorkspace();toast('已加入联机项目')
+}
+function subscribeCloudProject(cloudId){
+  if(!cloudRuntime.client||cloudRuntime.channels.has(cloudId))return;
+  const channel=cloudRuntime.client.channel('mcm-project-'+cloudId).on('postgres_changes',{event:'UPDATE',schema:'public',table:'training_projects',filter:`id=eq.${cloudId}`},payload=>applyRemoteProject(payload.new)).subscribe(status=>{if(status==='SUBSCRIBED')setCloudStatus('online','联机正常')});
+  cloudRuntime.channels.set(cloudId,channel)
+}
+function applyRemoteProject(row){
+  const index=state.projects.findIndex(p=>p.cloudId===row.id);if(index<0)return;
+  const local=state.projects[index];if(local.cloudUpdatedAt&&row.updated_at<=local.cloudUpdatedAt)return;
+  if(row.updated_by&&row.updated_by===cloudRuntime.userId){local.cloudUpdatedAt=row.updated_at;localStorage.setItem('mcm-training-v1',JSON.stringify(state));setCloudStatus('online','已同步');return}
+  const dirty=$('#paperSaveState')?.textContent==='未保存';if(dirty&&state.current===local.id){cloudRuntime.pendingRemote.set(row.id,row);toast('收到队友更新；请先保存当前正文，再点击立即同步');return}
+  cloudRuntime.applying=true;const remote=stableCloudProject(row);state.projects[index]=remote;if(state.current===local.id)state.current=remote.id;localStorage.setItem('mcm-training-v1',JSON.stringify(state));cloudRuntime.applying=false;render();toast('已收到队友的最新修改')
+}
+window.cloudSyncSchedule=function(){
+  if(cloudRuntime.applying)return;const p=current();if(!p?.cloudId)return;
+  clearTimeout(cloudRuntime.timer);setCloudStatus('syncing','等待同步');cloudRuntime.timer=setTimeout(()=>syncProjectToCloud(p),900)
+}
+async function syncProjectToCloud(p=current(),silent=false){
+  if(!p?.cloudId||cloudRuntime.applying)return;const client=await initCloud();if(!client)return;
+  setCloudStatus('syncing','正在同步');
+  const {data:{user}}=await client.auth.getUser();
+  const {data,error}=await client.from('training_projects').update({name:p.name,data:p,updated_by:user?.id||null}).eq('id',p.cloudId).select('updated_at').single();
+  if(error){setCloudStatus('error','同步失败');if(!silent)toast('云端同步失败：'+error.message);return}
+  p.cloudUpdatedAt=data.updated_at;localStorage.setItem('mcm-training-v1',JSON.stringify(state));setCloudStatus('online','已同步');if(!silent)toast('云端已同步')
+}
+async function syncCurrentProjectNow(){
+  const p=current(),pending=p?.cloudId&&cloudRuntime.pendingRemote.get(p.cloudId);
+  if(pending){if(confirm('云端有队友的新版本。确定加载云端版本吗？当前未同步的本地修改会被替换。')){cloudRuntime.pendingRemote.delete(p.cloudId);applyRemoteProject(pending)}return}
+  await syncProjectToCloud(p)
+}
+async function copyShareCode(){
+  const code=current()?.shareCode;if(!code)return;
+  try{await navigator.clipboard.writeText(code);toast('分享码已复制')}catch(e){prompt('请复制项目分享码：',code)}
+}
+initCloud().then(()=>render());
+</script>
+</body>
+</html>
