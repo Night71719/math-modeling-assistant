@@ -671,8 +671,25 @@ async function uploadProjectFiles(files,scope){
   const result=[];for(const file of [...(files||[])])result.push(await uploadProjectFile(file,scope));return result
 }
 async function fetchProjectBlob(meta){
+  if(!meta?.path)throw new Error('这条记录没有云端文件路径，请重新上传该文件');
   const client=await requireCloud();if(!client)throw new Error('无法连接云端');
-  const {data,error}=await client.storage.from(meta.bucket||PROJECT_FILE_BUCKET).download(meta.path);if(error)throw error;return data
+  let {data,error}=await client.storage.from(meta.bucket||PROJECT_FILE_BUCKET).download(meta.path);
+  if(error){
+    const session=await client.auth.getSession();
+    if(session.data?.session){
+      await client.auth.refreshSession();
+      const retry=await client.storage.from(meta.bucket||PROJECT_FILE_BUCKET).download(meta.path);
+      data=retry.data;error=retry.error
+    }
+  }
+  if(error){
+    const message=String(error.message||error);
+    if(/row.level|policy|unauthorized|forbidden|not found|object not found/i.test(message)){
+      throw new Error('当前账号没有该项目文件的读取权限，或文件并未成功上传。请先在 Supabase 运行 supabase-storage-fix.sql；若仍失败，请重新上传这个文件')
+    }
+    throw error
+  }
+  return data
 }
 async function removeCloudFiles(metas){
   const paths=(metas||[]).filter(Boolean).map(x=>x.path).filter(Boolean);if(!paths.length||!cloudRuntime.client)return;
@@ -730,7 +747,7 @@ async function hydrateStorageImages(root=document){
     if(img.src?.startsWith('blob:')&&img.complete&&img.naturalWidth>0)continue;
     img.dataset.hydrating='1';
     try{const meta={path:img.dataset.filePath,bucket:PROJECT_FILE_BUCKET},blob=await fetchProjectBlob(meta);img.src=URL.createObjectURL(blob);img.removeAttribute('data-loaded');img.alt=img.alt||'项目图片'}
-    catch(e){img.alt='图片读取失败'}
+    catch(e){img.alt='图片读取失败，请检查项目文件权限';img.title=e.message||'图片读取失败'}
     finally{delete img.dataset.hydrating}
   }
 }
