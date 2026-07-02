@@ -725,8 +725,14 @@ function attachmentHtml(arr,recordId,meta,allowFinal=false){
   return `<span class="attachment-pill ${meta.final?'final':''}">${isImageMeta(meta)?`<img class="file-thumb" data-file-path="${esc(meta.path)}" onclick="previewRecordFile('${arr}','${recordId}','${meta.id}')" alt="${esc(meta.name)}">`:`<b>${fileIcon(meta)}</b>`}<span class="file-name" title="${esc(meta.name)}">${esc(meta.name)}</span><small>${formatBytes(meta.size)}</small><button class="btn sm" onclick="previewRecordFile('${arr}','${recordId}','${meta.id}')">查看</button><button class="btn sm" onclick="downloadRecordFile('${arr}','${recordId}','${meta.id}')">下载</button>${allowFinal?`<button class="btn sm final-toggle ${meta.final?'active':''}" onclick="toggleAttachmentFinal('${arr}','${recordId}','${meta.id}')">${meta.final?'取消采用':'最终采用'}</button>`:''}<button class="icon-btn" title="删除文件" onclick="deleteAttachment('${arr}','${recordId}','${meta.id}')">×</button></span>`
 }
 async function hydrateStorageImages(root=document){
-  const imgs=[...root.querySelectorAll('img[data-file-path]:not([data-loaded])')];
-  for(const img of imgs){img.dataset.loaded='1';try{const meta={path:img.dataset.filePath,bucket:PROJECT_FILE_BUCKET},blob=await fetchProjectBlob(meta);img.src=URL.createObjectURL(blob)}catch(e){img.alt='图片读取失败'}}
+  const imgs=[...root.querySelectorAll('img[data-file-path]')].filter(img=>img.dataset.hydrating!=='1');
+  for(const img of imgs){
+    if(img.src?.startsWith('blob:')&&img.complete&&img.naturalWidth>0)continue;
+    img.dataset.hydrating='1';
+    try{const meta={path:img.dataset.filePath,bucket:PROJECT_FILE_BUCKET},blob=await fetchProjectBlob(meta);img.src=URL.createObjectURL(blob);img.removeAttribute('data-loaded');img.alt=img.alt||'项目图片'}
+    catch(e){img.alt='图片读取失败'}
+    finally{delete img.dataset.hydrating}
+  }
 }
 
 const resourceModalActualBase=resourceModal;
@@ -824,7 +830,7 @@ renderModels=function(){
   renderModelsAttachmentsBase();const p=current();p.models.forEach(m=>{const card=document.getElementById('model-'+m.id);if(!card||(m.attachments||[]).length===0)return;card.insertAdjacentHTML('beforeend',`<div class="attachment-list"><b style="width:100%">模型文件与图片</b>${m.attachments.map(a=>attachmentHtml('models',m.id,a,true)).join('')}</div>`)});hydrateStorageImages($('#moduleContent'))
 }
 function compressPaperImage(file,maxWidth=1400,maxHeight=1600,quality=.86){
-  return new Promise((resolve,reject)=>{if(!file?.type?.startsWith('image/'))return resolve(file);const img=new Image(),url=URL.createObjectURL(file);img.onload=()=>{let w=img.naturalWidth,h=img.naturalHeight,scale=Math.min(1,maxWidth/w,maxHeight/h);w=Math.max(1,Math.round(w*scale));h=Math.max(1,Math.round(h*scale));const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;canvas.getContext('2d').drawImage(img,0,0,w,h);const type=file.type==='image/png'?'image/png':'image/jpeg';canvas.toBlob(blob=>{URL.revokeObjectURL(url);if(!blob)return reject(new Error('图片压缩失败'));resolve(new File([blob],safeFileName(file.name||'paper-image')+(type==='image/png'?'.png':'.jpg'),{type}))},type,quality)};img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('无法读取图片'))};img.src=url})
+  return new Promise((resolve,reject)=>{if(!file?.type?.startsWith('image/'))return resolve(file);const img=new Image(),url=URL.createObjectURL(file);img.onload=()=>{let w=img.naturalWidth,h=img.naturalHeight,scale=Math.min(1,maxWidth/w,maxHeight/h);w=Math.max(1,Math.round(w*scale));h=Math.max(1,Math.round(h*scale));const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;canvas.getContext('2d').drawImage(img,0,0,w,h);const type=file.type==='image/png'?'image/png':'image/jpeg';canvas.toBlob(blob=>{URL.revokeObjectURL(url);if(!blob)return reject(new Error('图片压缩失败'));const base=safeFileName((file.name||'paper-image').replace(/\.[^.]+$/,''));resolve(new File([blob],base+(type==='image/png'?'.png':'.jpg'),{type}))},type,quality)};img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('无法读取图片'))};img.src=url})
 }
 function insertPaperFigure(meta,blob,caption='',range=null){
   const ed=$('#paperEditor'),url=URL.createObjectURL(blob),html=`<figure data-file-id="${meta.id}"><img src="${url}" data-storage-path="${esc(meta.path)}" data-file-path="${esc(meta.path)}" alt="${esc(meta.name)}"><figcaption>${esc(caption||meta.name)}</figcaption></figure><p><br></p>`,box=document.createElement('div');box.innerHTML=html;
@@ -855,6 +861,95 @@ addCommentImage=async function(commentId){
 const renderPaperPasteBase=renderPaper;
 renderPaper=function(){
   renderPaperPasteBase();const ed=$('#paperEditor');if(ed){normalizePaperImages();ed.addEventListener('paste',handlePaperPaste);ed.addEventListener('input',normalizePaperImages);migrateEmbeddedPaperImages()}
+}
+</script>
+<style>
+  .paper-sheet{min-height:0;height:980px;display:flex;flex-direction:column}
+  .paper-title-input{flex:0 0 auto}
+  .paper-editor{min-height:0;height:760px;overflow-y:auto;overscroll-behavior:contain}
+  .paper-footer{flex:0 0 auto;margin-top:auto}
+  .paper-page-hidden{display:none!important}
+  .paper-page-nav{display:flex;align-items:center;justify-content:center;gap:10px;margin:0 0 18px}
+  .paper-page-indicator{min-width:92px;text-align:center;color:#536176;font-size:13px;font-weight:700}
+  @media(max-width:1150px){.paper-sheet{height:940px}.paper-editor{height:720px}}
+  @media(max-width:760px){.paper-sheet{height:780px}.paper-editor{height:590px}}
+</style>
+<script>
+/* 论文正文分页：只改变显示，不把分页标记写入正文。 */
+const paperPageState=Object.create(null);
+function paperSectionPageKey(){return selectedPaperSection()?.id||'paper'}
+function normalizePaperPageBlocks(ed){
+  [...ed.childNodes].forEach(node=>{
+    if(node.nodeType===Node.TEXT_NODE){
+      if(!node.textContent.trim()){node.remove();return}
+      const p=document.createElement('p');p.textContent=node.textContent;node.replaceWith(p)
+    }
+  })
+}
+function clearPaperPageMarks(ed){
+  if(!ed)return;
+  [...ed.children].forEach(el=>{el.classList.remove('paper-page-hidden');el.removeAttribute('data-paper-page')})
+}
+function selectionTopBlock(ed){
+  const sel=window.getSelection();if(!sel?.rangeCount)return null;
+  let node=sel.anchorNode;if(!node||!ed.contains(node))return null;
+  if(node.nodeType===Node.TEXT_NODE)node=node.parentElement;
+  while(node&&node.parentElement!==ed)node=node.parentElement;
+  return node
+}
+function paginatePaper(followSelection=false){
+  const ed=$('#paperEditor'),indicator=$('#paperPageIndicator');if(!ed||!indicator)return;
+  const activeBlock=followSelection?selectionTopBlock(ed):null;
+  normalizePaperPageBlocks(ed);clearPaperPageMarks(ed);
+  const blocks=[...ed.children],limit=Math.max(420,ed.clientHeight-18);
+  let page=1,used=0;
+  blocks.forEach(block=>{
+    const cs=getComputedStyle(block),height=Math.max(24,block.getBoundingClientRect().height)+(parseFloat(cs.marginTop)||0)+(parseFloat(cs.marginBottom)||0);
+    if(used>0&&used+height>limit){page++;used=0}
+    block.dataset.paperPage=String(page);used+=Math.min(height,limit)
+    if(height>=limit){page++;used=0}
+  });
+  const total=Math.max(1,blocks.length?page-(used===0?1:0):1),key=paperSectionPageKey();
+  let current=paperPageState[key]||1;
+  if(activeBlock?.dataset.paperPage)current=Number(activeBlock.dataset.paperPage);
+  current=Math.max(1,Math.min(total,current));paperPageState[key]=current;
+  blocks.forEach(block=>block.classList.toggle('paper-page-hidden',Number(block.dataset.paperPage)!==current));
+  indicator.textContent=`第 ${current} / ${total} 页`;
+  const prev=$('#paperPagePrev'),next=$('#paperPageNext');
+  if(prev)prev.disabled=current<=1;if(next)next.disabled=current>=total
+}
+function turnPaperPage(step){
+  const key=paperSectionPageKey();paperPageState[key]=Math.max(1,(paperPageState[key]||1)+step);paginatePaper(false);
+  $('#paperEditor')?.scrollTo({top:0,behavior:'smooth'})
+}
+const savePaperBodyBeforePaging=savePaperBody;
+savePaperBody=function(quiet=false){
+  const ed=$('#paperEditor');if(!ed)return savePaperBodyBeforePaging(quiet);
+  const key=paperSectionPageKey(),page=paperPageState[key]||1;
+  clearPaperPageMarks(ed);savePaperBodyBeforePaging(quiet);
+  paperPageState[key]=page;paginatePaper(false)
+}
+const focusCommentBeforePaging=focusComment;
+focusComment=function(id){
+  const p=current(),comment=p.comments.find(c=>c.id===id);
+  if(comment&&comment.sectionId===p.selectedSectionId){
+    const ed=$('#paperEditor');clearPaperPageMarks(ed);
+    const mark=document.querySelector(`[data-comment-id="${comment.markerId}"]`);
+    let block=mark;while(block&&block.parentElement!==ed)block=block.parentElement;
+    paginatePaper(false);
+    if(block?.dataset.paperPage){paperPageState[paperSectionPageKey()]=Number(block.dataset.paperPage);paginatePaper(false)}
+  }
+  focusCommentBeforePaging(id)
+}
+const renderPaperBeforePaging=renderPaper;
+renderPaper=function(){
+  renderPaperBeforePaging();
+  const center=document.querySelector('.paper-center'),sheet=center?.querySelector('.paper-sheet'),ed=$('#paperEditor');
+  if(!center||!sheet||!ed)return;
+  sheet.insertAdjacentHTML('afterend',`<nav class="paper-page-nav" aria-label="论文正文分页"><button id="paperPagePrev" class="btn sm" onclick="turnPaperPage(-1)">← 上一页</button><span id="paperPageIndicator" class="paper-page-indicator">第 1 / 1 页</span><button id="paperPageNext" class="btn sm" onclick="turnPaperPage(1)">下一页 →</button></nav>`);
+  ed.addEventListener('input',()=>requestAnimationFrame(()=>paginatePaper(true)));
+  ed.addEventListener('load',()=>requestAnimationFrame(()=>paginatePaper(false)),true);
+  requestAnimationFrame(()=>paginatePaper(false));setTimeout(()=>paginatePaper(false),350)
 }
 save(true);render();
 </script>
