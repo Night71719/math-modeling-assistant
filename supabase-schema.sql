@@ -174,6 +174,55 @@ revoke all on function public.join_training_project(text) from public;
 grant execute on function public.create_training_project(text, jsonb) to authenticated;
 grant execute on function public.join_training_project(text) to authenticated;
 
+-- 项目文件存储桶：Word、表格、PDF、图片、实验结果等。
+insert into storage.buckets (id, name, public, file_size_limit)
+values ('project-files', 'project-files', false, 52428800)
+on conflict (id) do update
+set public = excluded.public,
+    file_size_limit = excluded.file_size_limit;
+
+drop policy if exists "project members can read files" on storage.objects;
+create policy "project members can read files"
+on storage.objects for select
+to authenticated
+using (
+  bucket_id = 'project-files'
+  and exists (
+    select 1
+    from public.training_project_members m
+    where m.project_id::text = (storage.foldername(name))[1]
+      and m.user_id = auth.uid()
+  )
+);
+
+drop policy if exists "project members can upload files" on storage.objects;
+create policy "project members can upload files"
+on storage.objects for insert
+to authenticated
+with check (
+  bucket_id = 'project-files'
+  and exists (
+    select 1
+    from public.training_project_members m
+    where m.project_id::text = (storage.foldername(name))[1]
+      and m.user_id = auth.uid()
+  )
+);
+
+drop policy if exists "project members can delete files" on storage.objects;
+create policy "project members can delete files"
+on storage.objects for delete
+to authenticated
+using (
+  bucket_id = 'project-files'
+  and exists (
+    select 1
+    from public.training_project_members m
+    where m.project_id::text = (storage.foldername(name))[1]
+      and m.user_id = auth.uid()
+  )
+);
+
 -- 将项目表加入 Supabase Realtime 发布（重复运行不会报错）。
 do $$
 begin

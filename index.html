@@ -518,7 +518,9 @@ async function initCloud(force=false){
       cloudRuntime.client=createClient(config.url.replace(/\/$/,''),config.anonKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
       let {data:{session},error}=await cloudRuntime.client.auth.getSession();if(error)throw error;
       if(!session){const result=await cloudRuntime.client.auth.signInAnonymously();if(result.error)throw result.error;session=result.data.session}
-      cloudRuntime.userId=session?.user?.id||'';cloudRuntime.ready=true;setCloudStatus('online','联机正常');state.projects.filter(p=>p.cloudId).forEach(p=>subscribeCloudProject(p.cloudId));return cloudRuntime.client
+      cloudRuntime.userId=session?.user?.id||'';
+      await refreshJoinedCloudProjects();
+      cloudRuntime.ready=true;setCloudStatus('online','联机正常');state.projects.filter(p=>p.cloudId).forEach(p=>subscribeCloudProject(p.cloudId));return cloudRuntime.client
     }catch(e){console.error('Cloud init failed',e);setCloudStatus('error','联机配置失败');cloudRuntime.ready=false;return null}
   })();
   const result=await cloudRuntime.initializing;cloudRuntime.initializing=null;return result
@@ -563,6 +565,23 @@ async function joinCloudProject(){
   if(existing>=0)state.projects[existing]=p;else state.projects.unshift(p);
   state.current=p.id;subscribeCloudProject(p.cloudId);localStorage.setItem('mcm-training-v1',JSON.stringify(state));setCloudStatus('online','联机正常');renderWorkspace();toast('已加入联机项目')
 }
+async function refreshJoinedCloudProjects(){
+  const {data,error}=await cloudRuntime.client.from('training_projects').select('id,share_code,name,data,updated_at,updated_by');
+  if(error)throw error;
+  let changed=false;
+  (data||[]).forEach(row=>{
+    const index=state.projects.findIndex(p=>p.cloudId===row.id);
+    if(index<0){state.projects.unshift(stableCloudProject(row));changed=true;return}
+    const local=state.projects[index];
+    if(!local.cloudUpdatedAt||row.updated_at>local.cloudUpdatedAt){
+      const wasCurrent=state.current===local.id;
+      state.projects[index]=stableCloudProject(row);
+      if(wasCurrent)state.current=state.projects[index].id;
+      changed=true
+    }
+  });
+  if(changed)localStorage.setItem('mcm-training-v1',JSON.stringify(state))
+}
 function subscribeCloudProject(cloudId){
   if(!cloudRuntime.client||cloudRuntime.channels.has(cloudId))return;
   const channel=cloudRuntime.client.channel('mcm-project-'+cloudId).on('postgres_changes',{event:'UPDATE',schema:'public',table:'training_projects',filter:`id=eq.${cloudId}`},payload=>applyRemoteProject(payload.new)).subscribe(status=>{if(status==='SUBSCRIBED')setCloudStatus('online','联机正常')});
@@ -571,7 +590,6 @@ function subscribeCloudProject(cloudId){
 function applyRemoteProject(row){
   const index=state.projects.findIndex(p=>p.cloudId===row.id);if(index<0)return;
   const local=state.projects[index];if(local.cloudUpdatedAt&&row.updated_at<=local.cloudUpdatedAt)return;
-  if(row.updated_by&&row.updated_by===cloudRuntime.userId){local.cloudUpdatedAt=row.updated_at;localStorage.setItem('mcm-training-v1',JSON.stringify(state));setCloudStatus('online','已同步');return}
   const dirty=$('#paperSaveState')?.textContent==='未保存';if(dirty&&state.current===local.id){cloudRuntime.pendingRemote.set(row.id,row);toast('收到队友更新；请先保存当前正文，再点击立即同步');return}
   cloudRuntime.applying=true;const remote=stableCloudProject(row);state.projects[index]=remote;if(state.current===local.id)state.current=remote.id;localStorage.setItem('mcm-training-v1',JSON.stringify(state));cloudRuntime.applying=false;render();toast('已收到队友的最新修改')
 }
@@ -597,6 +615,194 @@ async function copyShareCode(){
   try{await navigator.clipboard.writeText(code);toast('分享码已复制')}catch(e){prompt('请复制项目分享码：',code)}
 }
 initCloud().then(()=>render());
+</script>
+<style>
+  .file-field{border:1px dashed #b8c9df;border-radius:10px;padding:13px;background:#f8faff}
+  .file-field input{border:0;padding:4px;background:transparent}.file-hint{font-size:11px;color:var(--muted);margin-top:5px}
+  .file-actions,.attachment-list{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-top:10px}
+  .attachment-list{border-top:1px solid var(--line);padding-top:11px}
+  .attachment-pill{display:inline-flex;align-items:center;gap:7px;border:1px solid #d9e3ef;background:#f8faff;border-radius:9px;padding:6px 9px;max-width:310px}
+  .attachment-pill .file-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#40506a}
+  .attachment-pill.final{background:#fff8e4;border-color:#efd47f}
+  .file-thumb{width:82px;height:58px;object-fit:cover;border-radius:7px;border:1px solid var(--line);cursor:pointer;background:#eef2f7}
+  .file-viewer{width:min(1050px,96vw);height:min(820px,94vh);display:flex;flex-direction:column}.file-viewer .modal-body{flex:1;overflow:auto;background:#f2f5f9}
+  .viewer-content{min-height:420px;background:#fff;border-radius:8px;padding:18px}.viewer-content img{display:block;max-width:100%;max-height:70vh;margin:auto}
+  .viewer-content iframe{width:100%;height:68vh;border:0}.viewer-content pre{white-space:pre-wrap;word-break:break-word;margin:0;font:13px/1.7 Consolas,monospace}
+  .viewer-content table{border-collapse:collapse;width:100%;font-size:12px}.viewer-content th,.viewer-content td{border:1px solid #d9e2ed;padding:6px 8px;white-space:nowrap}.viewer-content th{background:#f2f6fb}
+  .docx-preview{font:15px/1.8 "Microsoft YaHei",sans-serif;padding:25px 38px}.docx-preview img{max-width:100%}
+  .manual-data{white-space:pre-wrap;font:13px/1.75 Consolas,monospace;background:#fff;border:1px solid var(--line);padding:15px;border-radius:8px}
+  .paper-toolbar-extra{display:inline-flex;gap:7px;margin-right:7px}.paper-editor figure{margin:22px auto;text-align:center}.paper-editor figure img{max-width:100%;max-height:620px;border-radius:3px}.paper-editor figcaption{font:13px/1.5 "Microsoft YaHei",sans-serif;color:#667286;margin-top:7px}
+  .comment-images{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}.comment-images .file-thumb{width:66px;height:48px}
+  .uploading-mask{position:absolute;inset:0;background:rgba(255,255,255,.75);display:grid;place-items:center;font-weight:700;color:var(--blue);z-index:5}
+  @media(max-width:700px){.file-viewer{width:98vw;height:96vh}.docx-preview{padding:15px}.attachment-pill{max-width:100%}}
+</style>
+<script>
+/* 真实文件层：Supabase Storage 上传、预览、下载，以及论文/批注插图 */
+const PROJECT_FILE_BUCKET='project-files';
+const ACCEPT_PROJECT_FILES='.doc,.docx,.xls,.xlsx,.csv,.tsv,.pdf,.txt,.md,.json,.jpg,.jpeg,.png,.gif,.webp,.svg,.zip,.py,.m';
+function ensureProjectFiles(p){
+  p.paperFiles=p.paperFiles||[];
+  (p.resources||[]).forEach(x=>x.fileMeta=x.fileMeta||null);
+  (p.data||[]).forEach(x=>{x.fileMeta=x.fileMeta||null;x.manualData=x.manualData||''});
+  (p.experiments||[]).forEach(x=>x.attachments=x.attachments||[]);
+  (p.comments||[]).forEach(x=>x.attachments=x.attachments||[]);
+  return p
+}
+state.projects.forEach(ensureProjectFiles);
+function formatBytes(n){if(!Number.isFinite(+n))return'';if(n<1024)return n+' B';if(n<1048576)return(n/1024).toFixed(1)+' KB';return(n/1048576).toFixed(1)+' MB'}
+function safeFileName(name){return String(name||'file').normalize('NFKC').replace(/[^\w.\-\u4e00-\u9fa5]+/g,'_').slice(-100)}
+function fileExt(meta){return String(meta?.name||'').split('.').pop().toLowerCase()}
+function isImageMeta(meta){return (meta?.type||'').startsWith('image/')||['png','jpg','jpeg','gif','webp','svg'].includes(fileExt(meta))}
+function fileIcon(meta){const e=fileExt(meta);if(isImageMeta(meta))return'▧';if(e==='pdf')return'PDF';if(['doc','docx'].includes(e))return'W';if(['xls','xlsx','csv','tsv'].includes(e))return'X';return'▤'}
+async function requireFileCloud(){
+  const p=current();if(!p?.cloudId){alert('上传真实文件需要先点击顶部“开启本项目联机”，文件将安全保存到 Supabase Storage。');return null}
+  const client=await requireCloud();return client?{client,p}:null
+}
+async function uploadProjectFile(file,scope='file'){
+  const cloud=await requireFileCloud();if(!cloud)throw new Error('项目尚未开启联机');
+  if(!file||!file.size)throw new Error('没有选择有效文件');
+  if(file.size>50*1024*1024)throw new Error('单个文件不能超过 50MB');
+  const id=uid(),path=`${cloud.p.cloudId}/${Date.now()}_${id}_${safeFileName(file.name)}`;
+  const {error}=await cloud.client.storage.from(PROJECT_FILE_BUCKET).upload(path,file,{contentType:file.type||'application/octet-stream',upsert:false});
+  if(error)throw error;
+  return {id,name:file.name,size:file.size,type:file.type||'',path,bucket:PROJECT_FILE_BUCKET,scope,uploadedAt:now(),final:false}
+}
+async function uploadProjectFiles(files,scope){
+  const result=[];for(const file of [...(files||[])])result.push(await uploadProjectFile(file,scope));return result
+}
+async function fetchProjectBlob(meta){
+  const client=await requireCloud();if(!client)throw new Error('无法连接云端');
+  const {data,error}=await client.storage.from(meta.bucket||PROJECT_FILE_BUCKET).download(meta.path);if(error)throw error;return data
+}
+async function removeCloudFiles(metas){
+  const paths=(metas||[]).filter(Boolean).map(x=>x.path).filter(Boolean);if(!paths.length||!cloudRuntime.client)return;
+  await cloudRuntime.client.storage.from(PROJECT_FILE_BUCKET).remove(paths)
+}
+function showAsyncModal(title,fields,onSubmit,submit='保存'){
+  const root=$('#modalRoot');root.innerHTML=`<div class="modal-backdrop" onclick="if(event.target===this)closeModal()"><form class="modal" id="asyncModalForm" style="position:relative"><div class="modal-head"><h3>${title}</h3><button type="button" class="icon-btn" onclick="closeModal()">×</button></div><div class="modal-body"><div class="form-grid">${fields}</div></div><div class="modal-foot"><button type="button" class="btn" onclick="closeModal()">取消</button><button class="btn primary" id="asyncSubmit">${submit}</button></div></form></div>`;
+  $('#asyncModalForm').onsubmit=async e=>{e.preventDefault();const button=$('#asyncSubmit'),old=button.textContent;button.disabled=true;button.textContent='正在上传…';try{await onSubmit(new FormData(e.target));closeModal();save();render()}catch(err){console.error(err);alert('操作失败：'+err.message);button.disabled=false;button.textContent=old}}
+}
+function uploadField(name='actualFile',multiple=false,accept=ACCEPT_PROJECT_FILES,label='选择文件'){
+  return `<div class="field span2"><label>${label}</label><div class="file-field"><input name="${name}" type="file" accept="${accept}" ${multiple?'multiple':''}><div class="file-hint">支持 Word、Excel、CSV、PDF、图片和文本；单个文件不超过 50MB。</div></div></div>`
+}
+function chooseFile(accept,multiple=false){return new Promise(resolve=>{const input=document.createElement('input');input.type='file';input.accept=accept;input.multiple=multiple;input.onchange=()=>resolve(multiple?[...input.files]:input.files[0]);input.click()})}
+function loadBrowserScript(src,globalName){
+  if(window[globalName])return Promise.resolve(window[globalName]);
+  return new Promise((resolve,reject)=>{const old=document.querySelector(`script[data-lib="${globalName}"]`);if(old){old.addEventListener('load',()=>resolve(window[globalName]));return}const s=document.createElement('script');s.src=src;s.dataset.lib=globalName;s.onload=()=>resolve(window[globalName]);s.onerror=()=>reject(new Error('预览组件加载失败'));document.head.appendChild(s)})
+}
+function viewerModal(title,body,meta,blob){
+  const url=blob?URL.createObjectURL(blob):'';$('#modalRoot').innerHTML=`<div class="modal-backdrop"><div class="modal file-viewer"><div class="modal-head"><div><h3>${esc(title)}</h3><div class="item-meta">${esc(formatBytes(meta?.size))}</div></div><button class="icon-btn" onclick="closeModal()">×</button></div><div class="modal-body"><div class="viewer-content">${body}</div></div><div class="modal-foot"><button class="btn" onclick="closeModal()">关闭</button>${blob?`<button class="btn primary" onclick="downloadBlobUrl('${url}','${esc(meta.name).replace(/'/g,'&#39;')}')">下载原文件</button>`:''}</div></div></div>`
+}
+function downloadBlobUrl(url,name){const a=document.createElement('a');a.href=url;a.download=name;a.click()}
+async function previewProjectFile(meta){
+  if(!meta?.path)return alert('这条旧记录只保存了文件名，没有保存实际文件。请重新上传文件。');
+  toast('正在读取文件…');
+  try{
+    const blob=await fetchProjectBlob(meta),ext=fileExt(meta),url=URL.createObjectURL(blob);
+    if(isImageMeta(meta))return viewerModal(meta.name,`<img src="${url}" alt="${esc(meta.name)}">`,meta,blob);
+    if(ext==='pdf')return viewerModal(meta.name,`<iframe src="${url}"></iframe>`,meta,blob);
+    if(ext==='docx'){
+      const mammoth=await loadBrowserScript('https://cdn.jsdelivr.net/npm/mammoth@1.10.0/mammoth.browser.min.js','mammoth'),result=await mammoth.convertToHtml({arrayBuffer:await blob.arrayBuffer()});
+      return viewerModal(meta.name,`<div class="docx-preview">${result.value}</div>`,meta,blob)
+    }
+    if(['xlsx','xls','csv','tsv'].includes(ext)){
+      const XLSX=await loadBrowserScript('https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js','XLSX'),book=XLSX.read(await blob.arrayBuffer(),{type:'array'}),sheet=book.Sheets[book.SheetNames[0]],html=XLSX.utils.sheet_to_html(sheet,{editable:false});
+      return viewerModal(`${meta.name} · ${book.SheetNames[0]}`,html,meta,blob)
+    }
+    if(['txt','md','json','py','m','csv','tsv'].includes(ext)||(meta.type||'').startsWith('text/'))return viewerModal(meta.name,`<pre>${esc(await blob.text())}</pre>`,meta,blob);
+    viewerModal(meta.name,`<div class="empty"><div class="empty-icon">${fileIcon(meta)}</div>此格式暂不支持网页内预览，请点击下方按钮下载后打开。</div>`,meta,blob)
+  }catch(e){alert('读取文件失败：'+e.message)}
+}
+async function downloadProjectFile(meta){try{const blob=await fetchProjectBlob(meta),url=URL.createObjectURL(blob);downloadBlobUrl(url,meta.name)}catch(e){alert('下载失败：'+e.message)}}
+function findRecordFile(arr,id,fileId){
+  const record=current()[arr]?.find(x=>x.id===id);if(!record)return null;
+  if(record.fileMeta?.id===fileId||(!fileId&&record.fileMeta))return record.fileMeta;
+  return (record.attachments||[]).find(x=>x.id===fileId)
+}
+function previewRecordFile(arr,id,fileId=''){const meta=findRecordFile(arr,id,fileId);previewProjectFile(meta)}
+function downloadRecordFile(arr,id,fileId=''){const meta=findRecordFile(arr,id,fileId);downloadProjectFile(meta)}
+function attachmentHtml(arr,recordId,meta,allowFinal=false){
+  return `<span class="attachment-pill ${meta.final?'final':''}">${isImageMeta(meta)?`<img class="file-thumb" data-file-path="${esc(meta.path)}" onclick="previewRecordFile('${arr}','${recordId}','${meta.id}')" alt="${esc(meta.name)}">`:`<b>${fileIcon(meta)}</b>`}<span class="file-name" title="${esc(meta.name)}">${esc(meta.name)}</span><small>${formatBytes(meta.size)}</small><button class="btn sm" onclick="previewRecordFile('${arr}','${recordId}','${meta.id}')">查看</button><button class="btn sm" onclick="downloadRecordFile('${arr}','${recordId}','${meta.id}')">下载</button>${allowFinal?`<button class="btn sm final-toggle ${meta.final?'active':''}" onclick="toggleAttachmentFinal('${arr}','${recordId}','${meta.id}')">${meta.final?'取消采用':'最终采用'}</button>`:''}<button class="icon-btn" title="删除文件" onclick="deleteAttachment('${arr}','${recordId}','${meta.id}')">×</button></span>`
+}
+async function hydrateStorageImages(root=document){
+  const imgs=[...root.querySelectorAll('img[data-file-path]:not([data-loaded])')];
+  for(const img of imgs){img.dataset.loaded='1';try{const meta={path:img.dataset.filePath,bucket:PROJECT_FILE_BUCKET},blob=await fetchProjectBlob(meta);img.src=URL.createObjectURL(blob)}catch(e){img.alt='图片读取失败'}}
+}
+
+const resourceModalActualBase=resourceModal;
+resourceModal=function(kind){
+  if(kind==='link')return resourceModalActualBase(kind);
+  showAsyncModal('上传附件与资料',field('name','资料名称')+field('type','资料类别','官方附件','select',['赛题 PDF','官方附件','参考论文','网页资料','队友笔记','其他资料'])+qField('question')+uploadField('actualFile',false,ACCEPT_PROJECT_FILES,'上传实际文件')+field('note','备注','','textarea'),async fd=>{
+    const file=fd.get('actualFile');if(!file?.size)throw new Error('请选择要上传的文件');const meta=await uploadProjectFile(file,'resource');
+    upsert('resources',null,{name:fd.get('name')||file.name,type:fd.get('type'),question:fd.get('question'),note:fd.get('note'),time:now(),link:'',fileMeta:meta})
+  },'上传并保存')
+}
+const renderResourcesFilesBase=renderResources;
+renderResources=function(){
+  renderResourcesFilesBase();const p=current();let list=byQuestion(p.resources,p.resourceQuestionFilter);if((p.resourceFilter||'全部')!=='全部')list=list.filter(x=>x.type===p.resourceFilter);
+  [...document.querySelectorAll('.resource-grid>.item-card')].forEach((card,i)=>{const r=list[i],button=card.querySelector('.btn.sm');if(!r||!button)return;
+    if(r.fileMeta){button.removeAttribute('onclick');button.textContent='查看文件';button.onclick=()=>previewProjectFile(r.fileMeta);button.insertAdjacentHTML('afterend',` <button class="btn sm" onclick="downloadRecordFile('resources','${r.id}')">下载</button>`)}
+    else if(!r.link){button.removeAttribute('onclick');button.textContent='补传实际文件';button.onclick=()=>attachFileToResource(r.id)}
+  });
+}
+async function attachFileToResource(id){
+  const file=await chooseFile(ACCEPT_PROJECT_FILES);if(!file)return;try{toast('正在上传文件…');const r=current().resources.find(x=>x.id===id);r.fileMeta=await uploadProjectFile(file,'resource');if(!r.name)r.name=file.name;save();renderResources()}catch(e){alert('上传失败：'+e.message)}
+}
+
+function dataModal(id){
+  const p=current(),x=p.data.find(v=>v.id===id)||{},parents=[{value:'',label:'无来源数据'},...p.data.filter(v=>v.id!==id).map(v=>({value:v.id,label:v.file||v.name}))];
+  showAsyncModal(id?'编辑数据记录':'新增数据记录',field('name','数据名称',x.name)+field('type','数据类别',x.type||'原始数据','select',['原始数据','清洗后数据','特征工程数据','中间结果','最终结果'])+field('file','文件或文件名称',x.file)+selectField('parentId','来源数据 / 父版本',x.parentId||'',parents)+field('source','数据来源说明',x.source)+qField('question',x.question)+uploadField('actualFile',false,ACCEPT_PROJECT_FILES,'上传数据文件（可选）')+field('manualData','直接输入或粘贴数据（可选）',x.manualData||'','textarea')+field('description','数据处理说明',x.description,'textarea'),async fd=>{
+    const data=Object.fromEntries(fd),file=fd.get('actualFile');delete data.actualFile;
+    if(file?.size){data.fileMeta=await uploadProjectFile(file,'data');if(!data.file)data.file=file.name}else data.fileMeta=x.fileMeta||null;
+    data.manualData=fd.get('manualData')||'';upsert('data',id,data,{time:now()})
+  })
+}
+const renderDataFilesBase=renderData;
+renderData=function(){
+  renderDataFilesBase();const p=current(),shown=byQuestion(p.data,p.dataQuestionFilter);
+  shown.forEach(d=>{const row=document.getElementById('data-'+d.id),body=row?.querySelector('.data-body');if(!body)return;let html='';
+    if(d.fileMeta)html+=`<button class="btn sm" onclick="previewRecordFile('data','${d.id}')">查看数据文件</button> <button class="btn sm" onclick="downloadRecordFile('data','${d.id}')">下载</button>`;
+    if(d.manualData)html+=` <button class="btn sm" onclick="previewManualData('${d.id}')">查看录入数据</button>`;
+    if(html)body.insertAdjacentHTML('beforeend',`<div class="file-actions">${html}</div>`)
+  })
+}
+function previewManualData(id){const d=current().data.find(x=>x.id===id);viewerModal(`${d.name} · 手动录入数据`,`<div class="manual-data">${esc(d.manualData||'')}</div>`,{name:d.name+'.txt',size:(d.manualData||'').length},new Blob([d.manualData||''],{type:'text/plain'}))}
+
+function experimentModal(id){
+  const p=current(),x=p.experiments.find(v=>v.id===id)||{},next='EXP-'+String(p.experiments.length+1).padStart(3,'0'),models=[{value:'',label:'请选择模型'},...p.models.map(m=>({value:m.id,label:m.name}))],datasets=[{value:'',label:'请选择数据版本'},...p.data.map(d=>({value:d.id,label:d.file||d.name}))];
+  showAsyncModal(id?'编辑实验记录':'新增实验记录',field('no','实验编号',x.no||next)+field('name','实验名称',x.name)+qField('question',x.question)+selectField('modelId','使用模型',x.modelId||'',models)+selectField('dataId','使用数据版本',x.dataId||'',datasets)+field('goal','实验目标',x.goal||'预测','select',['预测','分类','聚类','优化','评价','敏感性分析','仿真','其他'])+field('mainMetric','主要评价指标',x.mainMetric)+field('metricDirection','指标方向',x.metricDirection||'越小越好','select',['越小越好','越大越好','仅作描述'])+field('status','实验状态',x.status||'成功','select',['成功','失败','备选','已采用'])+selectField('final','最终采用实验',String(!!x.final),[{value:'false',label:'否'},{value:'true',label:'是'}])+field('params','参数设置',x.params,'textarea')+field('metrics','评价指标（每行一项）',x.metrics,'textarea')+field('output','输出结果说明',x.output)+field('image','图表或图片名称',x.image)+qField('imageQuestion',x.imageQuestion||x.question)+selectField('finalImage','最终采用图表',String(!!x.finalImage),[{value:'false',label:'否'},{value:'true',label:'是'}])+uploadField('actualFiles',true,ACCEPT_PROJECT_FILES,'上传实验文件、表格或图片（可多选）')+field('conclusion','实验结论',x.conclusion,'textarea'),async fd=>{
+    const data=Object.fromEntries(fd),files=fd.getAll('actualFiles').filter(f=>f?.size);delete data.actualFiles;const m=p.models.find(v=>v.id===data.modelId),dataset=p.data.find(v=>v.id===data.dataId);data.model=m?.name||'';data.data=dataset?.file||dataset?.name||'';data.final=data.final==='true';data.finalImage=data.finalImage==='true';data.attachments=[...(x.attachments||[]),...await uploadProjectFiles(files,'experiment')];upsert('experiments',id,data,{time:now()})
+  })
+}
+const renderExperimentsFilesBase=renderExperiments;
+renderExperiments=function(){
+  renderExperimentsFilesBase();const p=current();p.experiments.forEach(e=>{const card=document.getElementById('experiment-'+e.id);if(!card||(e.attachments||[]).length===0)return;card.insertAdjacentHTML('beforeend',`<div class="attachment-list"><b style="width:100%">实验文件与图表</b>${e.attachments.map(a=>attachmentHtml('experiments',e.id,a,true)).join('')}</div>`)});hydrateStorageImages($('#moduleContent'))
+}
+function toggleAttachmentFinal(arr,id,fileId){const r=current()[arr].find(x=>x.id===id),m=(r.attachments||[]).find(x=>x.id===fileId);if(m)m.final=!m.final;save();renderModule()}
+async function deleteAttachment(arr,id,fileId){if(!confirm('确定删除这个文件吗？'))return;const r=current()[arr].find(x=>x.id===id),m=(r.attachments||[]).find(x=>x.id===fileId);r.attachments=r.attachments.filter(x=>x.id!==fileId);await removeCloudFiles([m]);save();renderModule()}
+
+const renderPaperFilesBase=renderPaper;
+renderPaper=function(){
+  renderPaperFilesBase();ensureProjectFiles(current());const saveBtn=[...document.querySelectorAll('.page-title .btn')].find(b=>b.textContent.includes('保存正文'));if(saveBtn)saveBtn.insertAdjacentHTML('beforebegin',`<span class="paper-toolbar-extra"><button class="btn" onclick="insertPaperImage()">▧ 插入图片</button></span>`);
+  const p=current(),sec=selectedPaperSection(),comments=p.comments.filter(c=>c.sectionId===sec.id&&(p.commentFilter==='全部'||c.status===p.commentFilter));
+  [...document.querySelectorAll('.comment-card')].forEach((card,i)=>{const c=comments[i],actions=card.querySelector('.comment-actions');if(!c||!actions)return;if((c.attachments||[]).length)actions.insertAdjacentHTML('beforebegin',`<div class="comment-images">${c.attachments.map(a=>attachmentHtml('comments',c.id,a,false)).join('')}</div>`);actions.insertAdjacentHTML('afterbegin',`<button class="btn sm" onclick="event.stopPropagation();addCommentImage('${c.id}')">添加图片</button>`)});
+  hydratePaperImages();hydrateStorageImages($('#moduleContent'))
+}
+async function insertPaperImage(){
+  const file=await chooseFile('image/*');if(!file)return;try{toast('正在上传图片…');const meta=await uploadProjectFile(file,'paper'),blob=await fetchProjectBlob(meta),url=URL.createObjectURL(blob),caption=prompt('请输入图片标题（可留空）：','');current().paperFiles.push(meta);const ed=$('#paperEditor');ed.insertAdjacentHTML('beforeend',`<figure data-file-id="${meta.id}"><img src="${url}" data-storage-path="${esc(meta.path)}" data-file-path="${esc(meta.path)}" alt="${esc(meta.name)}"><figcaption>${esc(caption||meta.name)}</figcaption></figure><p><br></p>`);paperChanged();savePaperBody();toast('图片已插入正文')}catch(e){alert('插入图片失败：'+e.message)}
+}
+async function hydratePaperImages(){const ed=$('#paperEditor');if(ed)await hydrateStorageImages(ed)}
+async function addCommentImage(commentId){
+  const file=await chooseFile('image/*');if(!file)return;try{toast('正在上传批注图片…');const meta=await uploadProjectFile(file,'comment'),c=current().comments.find(x=>x.id===commentId);c.attachments=c.attachments||[];c.attachments.push(meta);save();renderPaper()}catch(e){alert('上传失败：'+e.message)}
+}
+const deleteCommentFilesBase=deleteComment;
+deleteComment=function(id){const c=current().comments.find(x=>x.id===id),files=[...(c?.attachments||[])];deleteCommentFilesBase(id);if(!current().comments.some(x=>x.id===id))removeCloudFiles(files)}
+const removeItemFilesBase=removeItem;
+removeItem=async function(arr,id){
+  const record=current()?.[arr]?.find(x=>x.id===id),files=[record?.fileMeta,...(record?.attachments||[])].filter(Boolean);removeItemFilesBase(arr,id);
+  if(record&&!current()?.[arr]?.some(x=>x.id===id))await removeCloudFiles(files)
+}
+save(true);render();
 </script>
 </body>
 </html>

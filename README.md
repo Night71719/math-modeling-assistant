@@ -33,6 +33,14 @@ window.MCM_CLOUD_CONFIG = {
 - 将生成的分享码发给队友；
 - 队友在首页点击“加入联机项目”，输入分享码；
 - 页面会自动同步并接收 Supabase Realtime 更新。
+- 附件、数据文件、实验结果、论文图片和批注图片会存入私有的
+  `project-files` Storage bucket；只有已加入项目的队员可以读取。
+
+如果网站升级后新增了文件功能，请重新在 SQL Editor 中完整运行一次
+`supabase-schema.sql`，脚本会自动补建 Storage bucket 和权限策略，不会清空已有项目。
+
+网页内支持预览图片、PDF、DOCX、XLS/XLSX、CSV/TSV 和文本文件。旧版 DOC
+或其他不支持预览的格式仍可以下载后用本机软件打开。
 
 当前同步方式为“项目级最后保存版本优先”。它适合三人训练原型，但不建议多人同时编辑同一段论文正文。
 
