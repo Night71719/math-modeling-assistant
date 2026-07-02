@@ -662,7 +662,7 @@ async function uploadProjectFile(file,scope='file'){
   const cloud=await requireFileCloud();if(!cloud)throw new Error('项目尚未开启联机');
   if(!file||!file.size)throw new Error('没有选择有效文件');
   if(file.size>50*1024*1024)throw new Error('单个文件不能超过 50MB');
-  const id=uid(),path=`${cloud.p.cloudId}/${Date.now()}_${id}_${safeFileName(file.name)}`;
+  const id=uid(),extension=(String(file.name).split('.').pop()||'bin').toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,10)||'bin',path=`${cloud.p.cloudId}/${Date.now()}_${id}.${extension}`;
   const {error}=await cloud.client.storage.from(PROJECT_FILE_BUCKET).upload(path,file,{contentType:file.type||'application/octet-stream',upsert:false});
   if(error)throw error;
   return {id,name:file.name,size:file.size,type:file.type||'',path,bucket:PROJECT_FILE_BUCKET,scope,uploadedAt:now(),final:false}
@@ -801,6 +801,60 @@ const removeItemFilesBase=removeItem;
 removeItem=async function(arr,id){
   const record=current()?.[arr]?.find(x=>x.id===id),files=[record?.fileMeta,...(record?.attachments||[])].filter(Boolean);removeItemFilesBase(arr,id);
   if(record&&!current()?.[arr]?.some(x=>x.id===id))await removeCloudFiles(files)
+}
+save(true);render();
+</script>
+<style>
+  .paper-center,.paper-sheet,.paper-editor{min-width:0;max-width:100%;overflow-x:hidden}
+  .paper-editor img{display:block!important;max-width:100%!important;width:auto!important;height:auto!important;max-height:680px!important;object-fit:contain!important;margin:18px auto!important}
+  .paper-editor figure{display:block;max-width:100%;overflow:hidden}
+  .paper-editor table{display:block;max-width:100%;overflow-x:auto}
+</style>
+<script>
+/* 文件修复：纯 ASCII Storage key、模型附件、论文粘贴图片压缩与宽度约束 */
+state.projects.forEach(p=>(p.models||[]).forEach(m=>m.attachments=m.attachments||[]));
+function modelModal(id){
+  const x=current().models.find(v=>v.id===id)||{};
+  showAsyncModal(id?'编辑模型':'新增模型',field('name','模型名称',x.name)+qField('question',x.question)+field('type','模型类别',x.type||'预测','select',['预测','优化','分类','聚类','评价','仿真','其他'])+field('status','当前状态',x.status||'待测试','select',['待测试','备选','已采用','已废弃'])+selectField('final','最终采用',String(!!x.final),[{value:'false',label:'否'},{value:'true',label:'是'}])+field('problem','解决什么问题',x.problem,'textarea')+field('principle','基本原理',x.principle,'textarea')+field('input','输入变量',x.input)+field('output','输出变量',x.output)+field('pros','优点',x.pros,'textarea')+field('cons','局限性',x.cons,'textarea')+field('code','代码链接或文件名',x.code)+uploadField('actualFiles',true,ACCEPT_PROJECT_FILES,'上传模型说明、代码、表格或图片（可多选）')+field('note','备注',x.note,'textarea'),async fd=>{
+    const data=Object.fromEntries(fd),files=fd.getAll('actualFiles').filter(f=>f?.size);delete data.actualFiles;data.final=data.final==='true';data.attachments=[...(x.attachments||[]),...await uploadProjectFiles(files,'model')];upsert('models',id,data)
+  })
+}
+const renderModelsAttachmentsBase=renderModels;
+renderModels=function(){
+  renderModelsAttachmentsBase();const p=current();p.models.forEach(m=>{const card=document.getElementById('model-'+m.id);if(!card||(m.attachments||[]).length===0)return;card.insertAdjacentHTML('beforeend',`<div class="attachment-list"><b style="width:100%">模型文件与图片</b>${m.attachments.map(a=>attachmentHtml('models',m.id,a,true)).join('')}</div>`)});hydrateStorageImages($('#moduleContent'))
+}
+function compressPaperImage(file,maxWidth=1400,maxHeight=1600,quality=.86){
+  return new Promise((resolve,reject)=>{if(!file?.type?.startsWith('image/'))return resolve(file);const img=new Image(),url=URL.createObjectURL(file);img.onload=()=>{let w=img.naturalWidth,h=img.naturalHeight,scale=Math.min(1,maxWidth/w,maxHeight/h);w=Math.max(1,Math.round(w*scale));h=Math.max(1,Math.round(h*scale));const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;canvas.getContext('2d').drawImage(img,0,0,w,h);const type=file.type==='image/png'?'image/png':'image/jpeg';canvas.toBlob(blob=>{URL.revokeObjectURL(url);if(!blob)return reject(new Error('图片压缩失败'));resolve(new File([blob],safeFileName(file.name||'paper-image')+(type==='image/png'?'.png':'.jpg'),{type}))},type,quality)};img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('无法读取图片'))};img.src=url})
+}
+function insertPaperFigure(meta,blob,caption='',range=null){
+  const ed=$('#paperEditor'),url=URL.createObjectURL(blob),html=`<figure data-file-id="${meta.id}"><img src="${url}" data-storage-path="${esc(meta.path)}" data-file-path="${esc(meta.path)}" alt="${esc(meta.name)}"><figcaption>${esc(caption||meta.name)}</figcaption></figure><p><br></p>`,box=document.createElement('div');box.innerHTML=html;
+  if(range&&ed.contains(range.commonAncestorContainer)){range.deleteContents();const frag=document.createDocumentFragment();while(box.firstChild)frag.appendChild(box.firstChild);range.insertNode(frag)}else ed.insertAdjacentHTML('beforeend',html);
+  normalizePaperImages();paperChanged();savePaperBody()
+}
+function normalizePaperImages(){
+  const ed=$('#paperEditor');if(!ed)return;ed.querySelectorAll('img').forEach(img=>{img.removeAttribute('width');img.removeAttribute('height');img.style.maxWidth='100%';img.style.width='auto';img.style.height='auto';img.style.maxHeight='680px';img.style.objectFit='contain';img.style.display='block';img.style.margin='18px auto'})
+}
+async function migrateEmbeddedPaperImages(){
+  const ed=$('#paperEditor');if(!ed||!current()?.cloudId)return;const images=[...ed.querySelectorAll('img[src^="data:image/"]:not([data-migrating])')];if(!images.length)return;
+  for(const img of images){img.dataset.migrating='1';try{const rawBlob=await(await fetch(img.src)).blob(),raw=new File([rawBlob],'pasted-image.'+(rawBlob.type.split('/')[1]||'png'),{type:rawBlob.type}),file=await compressPaperImage(raw),meta=await uploadProjectFile(file,'paper');current().paperFiles.push(meta);img.src=URL.createObjectURL(file);img.dataset.storagePath=meta.path;img.dataset.filePath=meta.path;img.dataset.loaded='1';img.removeAttribute('data-migrating')}catch(e){img.removeAttribute('data-migrating');console.warn('Embedded image migration failed',e)}}
+  selectedPaperSection().bodyHtml=ed.innerHTML;save();toast('已将正文中的内嵌图片压缩并转存到云端')
+}
+async function handlePaperPaste(event){
+  const imageItem=[...(event.clipboardData?.items||[])].find(i=>i.type?.startsWith('image/'));if(!imageItem){setTimeout(normalizePaperImages,0);return}
+  event.preventDefault();const raw=imageItem.getAsFile();if(!raw)return;const sel=window.getSelection(),range=sel?.rangeCount?sel.getRangeAt(0).cloneRange():null;
+  try{toast('正在压缩并上传粘贴的图片…');const file=await compressPaperImage(raw),meta=await uploadProjectFile(file,'paper'),blob=await fetchProjectBlob(meta);current().paperFiles.push(meta);insertPaperFigure(meta,blob,'粘贴图片',range);toast('图片已按论文版心插入')}catch(e){alert('粘贴图片失败：'+e.message)}
+}
+const insertPaperImageUncompressed=insertPaperImage;
+insertPaperImage=async function(){
+  const raw=await chooseFile('image/*');if(!raw)return;try{toast('正在压缩并上传图片…');const file=await compressPaperImage(raw),meta=await uploadProjectFile(file,'paper'),blob=await fetchProjectBlob(meta),caption=prompt('请输入图片标题（可留空）：','');current().paperFiles.push(meta);insertPaperFigure(meta,blob,caption||meta.name);toast('图片已插入正文')}catch(e){alert('插入图片失败：'+e.message)}
+}
+const addCommentImageUncompressed=addCommentImage;
+addCommentImage=async function(commentId){
+  const raw=await chooseFile('image/*');if(!raw)return;try{toast('正在压缩并上传批注图片…');const file=await compressPaperImage(raw,1200,1200,.82),meta=await uploadProjectFile(file,'comment'),c=current().comments.find(x=>x.id===commentId);c.attachments=c.attachments||[];c.attachments.push(meta);save();renderPaper()}catch(e){alert('上传失败：'+e.message)}
+}
+const renderPaperPasteBase=renderPaper;
+renderPaper=function(){
+  renderPaperPasteBase();const ed=$('#paperEditor');if(ed){normalizePaperImages();ed.addEventListener('paste',handlePaperPaste);ed.addEventListener('input',normalizePaperImages);migrateEmbeddedPaperImages()}
 }
 save(true);render();
 </script>
